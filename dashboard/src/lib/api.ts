@@ -2,7 +2,9 @@
  * Antigravity API Client — Typed HTTP client with JWT auth.
  */
 
-const API_BASE = "http://localhost:8000/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1`
+  : "http://localhost:8000/api/v1";
 
 // ─── Auth helpers ───
 
