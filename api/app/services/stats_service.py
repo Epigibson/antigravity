@@ -22,7 +22,7 @@ async def get_stats(db: AsyncSession, user_id: str) -> dict:
     )
 
     # Switches today
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     switches_today = await db.execute(
         select(func.count(AuditLog.id)).where(
             AuditLog.action == "context_switch",
@@ -31,7 +31,7 @@ async def get_stats(db: AsyncSession, user_id: str) -> dict:
     )
 
     # Skills executed (last 7 days)
-    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    week_ago = datetime.utcnow() - timedelta(days=7)
     skills_count = await db.execute(
         select(func.count(AuditLog.id)).where(
             AuditLog.action.in_(["env_inject", "git_switch", "cli_switch"]),
@@ -57,7 +57,7 @@ async def get_stats(db: AsyncSession, user_id: str) -> dict:
 
 async def get_activity(db: AsyncSession, user_id: str, days: int = 7) -> list[dict]:
     """Get switches per day for the last N days."""
-    start = datetime.now(timezone.utc) - timedelta(days=days)
+    start = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(
             func.date(AuditLog.created_at).label("day"),
@@ -78,7 +78,7 @@ async def get_activity(db: AsyncSession, user_id: str, days: int = 7) -> list[di
     day_map = {str(r[0]): r[1] for r in rows}
 
     for i in range(days):
-        d = (datetime.now(timezone.utc) - timedelta(days=days - 1 - i)).date()
+        d = (datetime.utcnow() - timedelta(days=days - 1 - i)).date()
         activity.append({
             "day": day_names[d.weekday()],
             "switches": day_map.get(str(d), 0),
