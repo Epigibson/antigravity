@@ -136,7 +136,7 @@ async def create_env(slug: str, body: EnvironmentCreate, user: User = Depends(ge
         cli_profiles=[p.model_dump() for p in body.cli_profiles],
     )
     db.add(env)
-    await db.flush()
+    await db.commit()
     return _env_to_schema(env)
 
 

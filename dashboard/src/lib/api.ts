@@ -241,6 +241,24 @@ export const api = {
     if (!res.ok) throw new Error("Error al eliminar proyecto");
   },
 
+  // Environments
+  async createEnvironment(
+    projectSlug: string,
+    data: {
+      name: string;
+      environment: string;
+      git_branch?: string;
+      cli_profiles?: Array<{ tool: string; account: string; org?: string; region?: string; status?: string }>;
+    }
+  ): Promise<unknown> {
+    const res = await fetch(`${API_BASE}/projects/${projectSlug}/environments`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
   // Skills
   async getSkillCatalog(): Promise<SkillResponse[]> {
     const res = await fetch(`${API_BASE}/skills/catalog`, { headers: authHeaders() });
