@@ -17,6 +17,8 @@ class EnvironmentSchema(BaseModel):
     environment: str
     git_branch: str | None
     env_var_count: int = 0
+    env_var_keys: list[str] = []  # just the keys, for display
+    env_vars: dict[str, str] = {}  # full key-value pairs
     cli_profiles: list[CLIProfileSchema] = []
 
     model_config = {"from_attributes": True}

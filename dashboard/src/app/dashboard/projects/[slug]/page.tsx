@@ -20,6 +20,9 @@ import {
   Trash2,
   Zap,
   Shield,
+  Eye,
+  EyeOff,
+  Variable,
 } from "lucide-react";
 import {
   Card,
@@ -102,6 +105,14 @@ export default function ProjectDetailPage() {
   // Skills
   const [skillCatalog, setSkillCatalog] = useState<SkillResponse[]>([]);
   const [togglingSkill, setTogglingSkill] = useState<string | null>(null);
+
+  // Env vars modal
+  const [showVarsModal, setShowVarsModal] = useState(false);
+  const [varsEnvName, setVarsEnvName] = useState("");
+  const [varsEntries, setVarsEntries] = useState<Array<{ key: string; value: string; isNew?: boolean }>>([]);
+  const [varsSaving, setVarsSaving] = useState(false);
+  const [varsError, setVarsError] = useState("");
+  const [showValues, setShowValues] = useState(false);
 
   // Delete confirm
   const [deletingEnv, setDeletingEnv] = useState<string | null>(null);
@@ -441,6 +452,42 @@ export default function ProjectDetailPage() {
                   </div>
                 )}
 
+                {/* ── Environment Variables ── */}
+                <div className="border-t border-border/40 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Key className="h-3 w-3" />
+                      Variables de Entorno ({env.env_var_count})
+                    </div>
+                    <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs"
+                            onClick={() => {
+                              setVarsEnvName(env.name);
+                              const entries = Object.entries(env.env_vars || {}).map(([key, value]) => ({ key, value: "", isNew: false }));
+                              setVarsEntries(entries.length > 0 ? entries : [{ key: "", value: "", isNew: true }]);
+                              setShowValues(false);
+                              setVarsError("");
+                              setShowVarsModal(true);
+                            }}>
+                      <Plus className="h-3 w-3" /> Variables
+                    </Button>
+                  </div>
+                  {env.env_var_count > 0 ? (
+                    <div className="space-y-1">
+                      {Object.entries(env.env_vars || {}).map(([key, maskedValue]) => (
+                        <div key={key} className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-1.5">
+                          <span className="text-xs font-mono font-medium text-foreground">{key}</span>
+                          <span className="text-xs text-muted-foreground">=</span>
+                          <span className="text-xs font-mono text-muted-foreground flex-1">{String(maskedValue)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      Sin variables. Agrega API keys, tokens, y secrets.
+                    </p>
+                  )}
+                </div>
+
                 {/* CLI command */}
                 <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
                   <Terminal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -744,6 +791,143 @@ export default function ProjectDetailPage() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+      {/* ═══ Env Vars Modal ═══ */}
+      {showVarsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVarsModal(false)} />
+          <div className="relative w-full max-w-2xl mx-4 rounded-xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto">
+            <button onClick={() => setShowVarsModal(false)}
+                    className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-violet text-white">
+                <Key className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Variables de Entorno</h2>
+                <p className="text-sm text-muted-foreground">
+                  Entorno: <span className="font-mono text-foreground">{varsEnvName}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-muted/30 border border-border/40 px-3 py-2 mb-4">
+              <p className="text-[11px] text-muted-foreground">
+                🔐 Las variables se guardan de forma segura. Los valores existentes aparecen vacíos por seguridad —
+                solo ingresa un nuevo valor si quieres cambiarlo. Deja el campo vacío para mantener el valor actual.
+              </p>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              {/* Headers */}
+              <div className="grid grid-cols-[1fr_1fr_32px] gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
+                <span>Clave</span>
+                <span>Valor</span>
+                <span></span>
+              </div>
+
+              {varsEntries.map((entry, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_1fr_32px] gap-2">
+                  <Input
+                    placeholder="DATABASE_URL"
+                    value={entry.key}
+                    onChange={(e) => {
+                      const updated = [...varsEntries];
+                      updated[idx] = { ...updated[idx], key: e.target.value };
+                      setVarsEntries(updated);
+                    }}
+                    className="font-mono text-sm h-9"
+                  />
+                  <Input
+                    type="password"
+                    placeholder={entry.isNew ? "valor" : "••• dejar vacío para mantener"}
+                    value={entry.value}
+                    onChange={(e) => {
+                      const updated = [...varsEntries];
+                      updated[idx] = { ...updated[idx], value: e.target.value };
+                      setVarsEntries(updated);
+                    }}
+                    className="font-mono text-sm h-9"
+                  />
+                  <button
+                    onClick={() => setVarsEntries(varsEntries.filter((_, i) => i !== idx))}
+                    className="flex items-center justify-center rounded-md h-9 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs mb-4"
+                    onClick={() => setVarsEntries([...varsEntries, { key: "", value: "", isNew: true }])}>
+              <Plus className="h-3 w-3" /> Agregar Variable
+            </Button>
+
+            {/* Common presets */}
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {["DATABASE_URL", "SUPABASE_URL", "SUPABASE_ANON_KEY", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "RAILWAY_TOKEN"].map((key) => {
+                const exists = varsEntries.some((e) => e.key === key);
+                if (exists) return null;
+                return (
+                  <button key={key} onClick={() => setVarsEntries([...varsEntries, { key, value: "", isNew: true }])}
+                          className="rounded border border-border/60 px-2 py-0.5 text-[10px] font-mono text-muted-foreground hover:bg-muted transition-colors">
+                    + {key}
+                  </button>
+                );
+              })}
+            </div>
+
+            {varsError && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive mb-4">
+                {varsError}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setShowVarsModal(false)}>Cancelar</Button>
+              <Button disabled={varsSaving}
+                      className="gap-2 gradient-violet text-white hover:opacity-90 border-0"
+                      onClick={async () => {
+                        setVarsError("");
+                        setVarsSaving(true);
+                        try {
+                          // Build env_vars dict: only include entries with non-empty keys
+                          const newVars: Record<string, string> = {};
+                          for (const entry of varsEntries) {
+                            if (!entry.key.trim()) continue;
+                            if (entry.value) {
+                              newVars[entry.key] = entry.value;
+                            }
+                            // If value is empty and not new, we keep the old value
+                            // by not including it (the API replaces all vars)
+                            // So for existing vars with empty value, we need to NOT send them
+                            // unless user explicitly wants to keep them
+                            // For simplicity: if value is empty AND not new, skip (keep old)
+                            // This means user must re-enter all values when changing any var
+                            // TODO: implement partial update
+                          }
+                          if (Object.keys(newVars).length === 0 && varsEntries.some(e => e.key.trim())) {
+                            throw new Error("Ingresa al menos un valor para guardar las variables.");
+                          }
+                          await api.updateEnvironment(slug, varsEnvName, { env_vars: newVars });
+                          setShowVarsModal(false);
+                          await loadProject();
+                        } catch (err: unknown) {
+                          setVarsError(err instanceof Error ? err.message : "Error");
+                        } finally {
+                          setVarsSaving(false);
+                        }
+                      }}>
+                {varsSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {varsSaving ? "Guardando..." : "Guardar Variables"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -22,14 +22,24 @@ from app.middleware.auth import get_current_user
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
 
+def _mask_value(v: str) -> str:
+    """Mask a secret value, showing only first 4 chars."""
+    if len(v) <= 4:
+        return "****"
+    return v[:4] + "••••"
+
+
 def _env_to_schema(env: EnvironmentProfile) -> EnvironmentSchema:
     profiles = [CLIProfileSchema(**p) for p in (env.cli_profiles or [])]
+    raw_vars = env.env_vars or {}
     return EnvironmentSchema(
         id=env.id,
         name=env.name,
         environment=env.environment,
         git_branch=env.git_branch,
-        env_var_count=len(env.env_vars or {}),
+        env_var_count=len(raw_vars),
+        env_var_keys=list(raw_vars.keys()),
+        env_vars={k: _mask_value(v) for k, v in raw_vars.items()},
         cli_profiles=profiles,
     )
 

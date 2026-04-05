@@ -79,6 +79,8 @@ export interface EnvironmentResponse {
   environment: string;
   git_branch: string | null;
   env_var_count: number;
+  env_var_keys: string[];
+  env_vars: Record<string, string>;
   cli_profiles: CLIProfile[];
 }
 
@@ -264,6 +266,7 @@ export const api = {
     envName: string,
     data: {
       git_branch?: string;
+      env_vars?: Record<string, string>;
       cli_profiles?: Array<{ tool: string; account: string; org?: string; region?: string; status?: string }>;
     }
   ): Promise<unknown> {
