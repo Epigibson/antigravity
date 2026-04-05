@@ -159,4 +159,21 @@ async def update_env(slug: str, env_name: str, body: EnvironmentUpdate,
     if body.cli_profiles is not None:
         env.cli_profiles = [p.model_dump() for p in body.cli_profiles]
 
+    await db.commit()
     return _env_to_schema(env)
+
+
+@router.delete("/{slug}/environments/{env_name}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_env(slug: str, env_name: str,
+                     user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Eliminar un entorno."""
+    project = await get_project_by_slug(db, user.id, slug)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proyecto no encontrado")
+
+    env = next((e for e in project.environments if e.name == env_name), None)
+    if not env:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entorno no encontrado")
+
+    await db.delete(env)
+    await db.commit()

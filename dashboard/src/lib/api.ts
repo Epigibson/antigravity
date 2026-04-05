@@ -259,6 +259,41 @@ export const api = {
     return handleResponse(res);
   },
 
+  async updateEnvironment(
+    projectSlug: string,
+    envName: string,
+    data: {
+      git_branch?: string;
+      cli_profiles?: Array<{ tool: string; account: string; org?: string; region?: string; status?: string }>;
+    }
+  ): Promise<unknown> {
+    const res = await fetch(`${API_BASE}/projects/${projectSlug}/environments/${envName}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  async deleteEnvironment(projectSlug: string, envName: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/projects/${projectSlug}/environments/${envName}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al eliminar entorno");
+  },
+
+  // Skills
+  async toggleSkill(projectSlug: string, skillId: string, enabled: boolean, priority?: number): Promise<unknown> {
+    const params = new URLSearchParams({ enabled: String(enabled) });
+    if (priority !== undefined) params.set("priority", String(priority));
+    const res = await fetch(`${API_BASE}/skills/projects/${projectSlug}/${skillId}?${params}`, {
+      method: "PUT",
+      headers: authHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   // Skills
   async getSkillCatalog(): Promise<SkillResponse[]> {
     const res = await fetch(`${API_BASE}/skills/catalog`, { headers: authHeaders() });

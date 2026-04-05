@@ -86,4 +86,5 @@ async def toggle_skill(
         )
         db.add(config)
 
+    await db.commit()
     return {"status": "ok", "skill_id": skill_id, "enabled": enabled, "priority": priority}
