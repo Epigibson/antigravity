@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.skill import SkillConfiguration, Skill
+from app.models.skill import SkillConfiguration, SkillDefinition
 
 from app.models.project import Project
 from app.models.organization import Organization, OrganizationMember
