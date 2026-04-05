@@ -106,6 +106,7 @@ async def delete(slug: str, user: User = Depends(get_current_user), db: AsyncSes
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proyecto no encontrado")
     await delete_project(db, project)
+    await db.commit()
 
 
 # ─── Environments ───

@@ -49,7 +49,7 @@ async def get_project_by_slug(db: AsyncSession, user_id: str, slug: str) -> Proj
 
     result = await db.execute(
         select(Project)
-        .where(Project.org_id == org_id, Project.slug == slug)
+        .where(Project.org_id == org_id, Project.slug == slug, Project.is_active == True)
         .options(
             selectinload(Project.environments),
             selectinload(Project.skill_configs).selectinload(SkillConfiguration.skill),
