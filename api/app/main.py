@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle — creates tables on boot."""
     await init_db()
     print(f"🚀 {settings.app_name} v{settings.app_version} — Database ready")
+    print(f"🌐 CORS origins: {settings.cors_origins}")
     yield
     print("👋 Shutting down...")
 
@@ -32,20 +33,9 @@ app = FastAPI(
 )
 
 # ─── CORS ───
-origins = settings.cors_origins
-# Ensure Railway origins are always included
-railway_origins = [
-    "https://antigravity-production-a677.up.railway.app",
-    "https://compassionate-youth-production-e13c.up.railway.app",
-    "http://localhost:3000",
-]
-for o in railway_origins:
-    if o not in origins:
-        origins.append(o)
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
