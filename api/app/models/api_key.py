@@ -13,7 +13,7 @@ class ApiKey(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(100), nullable=False)
-    key_prefix = Column(String(12), nullable=False)  # "ag_live_xxxx" visible part
+    key_prefix = Column(String(30), nullable=False)  # "ag_live_xxxx..." visible part
     key_hash = Column(String(64), nullable=False, unique=True)  # SHA-256 of full key
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     is_active = Column(Boolean, default=True)

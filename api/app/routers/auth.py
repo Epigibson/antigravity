@@ -112,27 +112,32 @@ async def generate_api_key(
     db: AsyncSession = Depends(get_db),
 ):
     """Generar nueva API key para el CLI. La key completa solo se muestra UNA vez."""
-    full_key, prefix, key_hash = ApiKey.generate_key()
+    try:
+        full_key, prefix, key_hash = ApiKey.generate_key()
 
-    api_key = ApiKey(
-        name=body.name,
-        key_prefix=prefix,
-        key_hash=key_hash,
-        user_id=user.id,
-    )
-    db.add(api_key)
-    await db.commit()
-    await db.refresh(api_key)
+        api_key = ApiKey(
+            name=body.name,
+            key_prefix=prefix,
+            key_hash=key_hash,
+            user_id=user.id,
+        )
+        db.add(api_key)
+        await db.commit()
+        await db.refresh(api_key)
 
-    return ApiKeyCreatedResponse(
-        id=api_key.id,
-        name=api_key.name,
-        key_prefix=api_key.key_prefix,
-        full_key=full_key,
-        is_active=api_key.is_active,
-        last_used_at=None,
-        created_at=api_key.created_at.isoformat() if api_key.created_at else "",
-    )
+        return ApiKeyCreatedResponse(
+            id=api_key.id,
+            name=api_key.name,
+            key_prefix=api_key.key_prefix,
+            full_key=full_key,
+            is_active=api_key.is_active,
+            last_used_at=None,
+            created_at=api_key.created_at.isoformat() if api_key.created_at else "",
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating API key: {str(e)}")
 
 
 @router.get("/api-keys", response_model=list[ApiKeyResponse])
