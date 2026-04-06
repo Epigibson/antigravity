@@ -267,36 +267,29 @@ func (v *VercelProfiler) Switch(profile domain.CLIProfile) error {
 
 	if token != "" {
 		os.Setenv("VERCEL_TOKEN", token)
-	}
-
-	// Switch team/scope (pass --token if available)
-	if profile.Org != "" {
-		args := []string{"switch", profile.Org}
-		if token != "" {
-			args = append(args, "--token", token)
-		}
-		cmd := exec.Command("vercel", args...)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("vercel switch failed: %s", strings.TrimSpace(string(output)))
-		}
-	}
-
-	// Link project (pass --token if available)
-	if profile.Account != "" {
-		args := []string{"link", "--project", profile.Account, "--yes"}
-		if token != "" {
-			args = append(args, "--token", token)
-		}
-		cmd := exec.Command("vercel", args...)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("vercel link failed: %s", strings.TrimSpace(string(output)))
-		}
-	}
-
-	if token == "" {
+	} else {
 		return fmt.Errorf("vercel: no token found. Add a Vercel Token in your dashboard profile credentials")
+	}
+
+	// Verify token works
+	args := []string{"whoami", "--token", token}
+	cmd := exec.Command("vercel", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("vercel auth failed: %s", strings.TrimSpace(string(output)))
+	}
+
+	// Link project with --token and --scope (if org provided)
+	if profile.Account != "" {
+		linkArgs := []string{"link", "--project", profile.Account, "--yes", "--token", token}
+		if profile.Org != "" {
+			linkArgs = append(linkArgs, "--scope", profile.Org)
+		}
+		linkCmd := exec.Command("vercel", linkArgs...)
+		linkOutput, linkErr := linkCmd.CombinedOutput()
+		if linkErr != nil {
+			return fmt.Errorf("vercel link failed: %s", strings.TrimSpace(string(linkOutput)))
+		}
 	}
 	return nil
 }
