@@ -38,7 +38,91 @@ class SubscriptionResponse(BaseModel):
     current_period_end: str | None
 
 
+class EmbeddedCheckoutResponse(BaseModel):
+    client_secret: str
+    subscription_id: str
+    customer_id: str
+
+
+class StripeConfigResponse(BaseModel):
+    publishable_key: str
+
+
 # ─── Endpoints ───
+
+@router.get("/config", response_model=StripeConfigResponse)
+async def get_stripe_config():
+    """Return Stripe publishable key for the frontend."""
+    if not settings.stripe_publishable_key:
+        raise HTTPException(status_code=503, detail="Stripe no está configurado")
+    return StripeConfigResponse(publishable_key=settings.stripe_publishable_key)
+
+
+@router.post("/create-subscription", response_model=EmbeddedCheckoutResponse)
+async def create_embedded_subscription(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create an incomplete subscription for embedded payment via Stripe Elements."""
+    import stripe as stripe_lib
+    stripe_lib.api_key = settings.stripe_secret_key
+
+    if not settings.stripe_secret_key:
+        raise HTTPException(status_code=503, detail="Stripe no está configurado")
+
+    if user.plan == "premium":
+        raise HTTPException(status_code=400, detail="Ya tienes el plan Premium")
+
+    # Get or create Stripe customer
+    result = await db.execute(
+        select(Subscription).where(Subscription.org_id == user.id)
+    )
+    sub = result.scalar_one_or_none()
+
+    if sub and sub.stripe_customer_id:
+        customer_id = sub.stripe_customer_id
+    else:
+        customer = stripe_lib.Customer.create(
+            email=user.email,
+            name=user.display_name or user.email,
+            metadata={"nexus_user_id": user.id},
+        )
+        customer_id = customer.id
+
+    try:
+        price_id = stripe_service.get_premium_price_id()
+
+        subscription = stripe_lib.Subscription.create(
+            customer=customer_id,
+            items=[{"price": price_id}],
+            payment_behavior="default_incomplete",
+            payment_settings={"save_default_payment_method": "on_subscription"},
+            expand=["latest_invoice.payment_intent"],
+            metadata={"nexus_user_id": user.id},
+        )
+
+        # Save customer ID early
+        if not sub:
+            sub = Subscription(
+                org_id=user.id,
+                stripe_customer_id=customer_id,
+                stripe_subscription_id=subscription.id,
+                plan="free",
+                status=SubscriptionStatus.incomplete,
+            )
+            db.add(sub)
+        else:
+            sub.stripe_customer_id = customer_id
+            sub.stripe_subscription_id = subscription.id
+        await db.commit()
+
+        return EmbeddedCheckoutResponse(
+            client_secret=subscription.latest_invoice.payment_intent.client_secret,
+            subscription_id=subscription.id,
+            customer_id=customer_id,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creando suscripción: {str(e)}")
 
 @router.post("/checkout", response_model=CheckoutResponse)
 async def create_checkout(

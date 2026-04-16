@@ -340,6 +340,19 @@ export const api = {
   },
 
   // Billing
+  async getStripeConfig(): Promise<{ publishable_key: string }> {
+    const res = await fetch(`${API_BASE}/billing/config`, { headers: authHeaders() });
+    return handleResponse<{ publishable_key: string }>(res);
+  },
+
+  async createSubscription(): Promise<{ client_secret: string; subscription_id: string; customer_id: string }> {
+    const res = await fetch(`${API_BASE}/billing/create-subscription`, {
+      method: "POST",
+      headers: authHeaders(),
+    });
+    return handleResponse<{ client_secret: string; subscription_id: string; customer_id: string }>(res);
+  },
+
   async createCheckout(successUrl: string, cancelUrl: string): Promise<{ checkout_url: string }> {
     const res = await fetch(`${API_BASE}/billing/checkout`, {
       method: "POST",

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
+import StripeCheckoutModal from "@/components/stripe-checkout-modal";
 import {
   CreditCard,
   Rocket,
@@ -140,7 +141,7 @@ function UsageBar({
 
 // ─── Main page ───
 
-export default function BillingPage() {
+function BillingPageContent() {
   const { user, refreshProfile } = useAuth();
   const searchParams = useSearchParams();
   const [stats, setStats] = useState<{
@@ -152,6 +153,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
   const [managingPortal, setManagingPortal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error" | "cancelled"; text: string } | null>(null);
 
   const currentPlan = (user?.plan || "free").toLowerCase();
@@ -187,22 +189,15 @@ export default function BillingPage() {
 
   const maxProjects = currentPlan === "free" ? 3 : currentPlan === "premium" ? 100 : null;
 
-  const handleUpgrade = async () => {
-    setUpgrading(true);
-    try {
-      const baseUrl = window.location.origin;
-      const { checkout_url } = await api.createCheckout(
-        `${baseUrl}/dashboard/billing?status=success`,
-        `${baseUrl}/dashboard/billing?status=cancelled`
-      );
-      window.location.href = checkout_url;
-    } catch (err) {
-      console.error("Checkout error:", err);
-      setStatusMsg({ type: "error", text: "Error al iniciar el pago. Intenta de nuevo." });
-      setTimeout(() => setStatusMsg(null), 4000);
-    } finally {
-      setUpgrading(false);
-    }
+  const handleUpgrade = () => {
+    setShowCheckoutModal(true);
+  };
+
+  const handleCheckoutSuccess = () => {
+    setShowCheckoutModal(false);
+    setStatusMsg({ type: "success", text: "¡Pago exitoso! Tu plan Premium está activo." });
+    refreshProfile();
+    setTimeout(() => setStatusMsg(null), 6000);
   };
 
   const handleManageSubscription = async () => {
@@ -538,6 +533,21 @@ export default function BillingPage() {
           </div>
         </CardContent>
       </Card>
+      {/* ─── Stripe Checkout Modal ─── */}
+      <StripeCheckoutModal
+        open={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
+  );
+}
+
+// Wrap with Suspense for useSearchParams
+export default function BillingPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}>
+      <BillingPageContent />
+    </Suspense>
   );
 }
