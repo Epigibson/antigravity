@@ -149,12 +149,34 @@ async def create_embedded_subscription(
             invoice_id = invoice_id.id
         print(f"💳 Step 7b: Retrieving invoice {invoice_id}...")
         invoice = stripe_lib.Invoice.retrieve(invoice_id, expand=["payment_intent"])
-        pi = invoice.payment_intent
-        cs = getattr(pi, 'client_secret', None) if pi else None
-        print(f"💳 Step 8: invoice={invoice.id} pi={getattr(pi, 'id', None)} cs={'yes' if cs else 'NO'}")
+
+        # Debug: print all available keys
+        invoice_data = dict(invoice)
+        print(f"💳 Invoice keys: {list(invoice_data.keys())}")
+        
+        # Try multiple ways to get the payment_intent
+        pi = None
+        cs = None
+        
+        # Method 1: dict access
+        if 'payment_intent' in invoice_data:
+            pi_raw = invoice_data['payment_intent']
+            print(f"💳 pi_raw type={type(pi_raw)} val={str(pi_raw)[:80]}")
+            if isinstance(pi_raw, str):
+                # It's a PI ID, need to retrieve it
+                pi = stripe_lib.PaymentIntent.retrieve(pi_raw)
+            elif pi_raw and hasattr(pi_raw, 'client_secret'):
+                pi = pi_raw
+            cs = getattr(pi, 'client_secret', None) if pi else None
+
+        # Method 2: Look for it in the raw data
+        if not cs and hasattr(invoice, '_last_response'):
+            print(f"💳 Trying raw response...")
+        
+        print(f"💳 Step 8: pi={getattr(pi, 'id', None)} cs={'yes' if cs else 'NO'}")
 
         if not cs:
-            raise ValueError(f"No client_secret. pi={pi}, invoice_status={invoice.status}")
+            raise ValueError(f"No client_secret. Available keys: {list(invoice_data.keys())}")
 
         if not sub:
             sub = Subscription(
