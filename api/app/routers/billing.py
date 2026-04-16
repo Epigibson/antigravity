@@ -34,7 +34,8 @@ async def _get_user_org_id(user: User, db: AsyncSession) -> str:
         plan=user.plan,
     )
     db.add(org)
-    await db.flush()
+    await db.commit()
+    await db.refresh(org)
     return org.id
 
 
@@ -117,6 +118,15 @@ async def create_embedded_subscription(
     try:
         price_id = stripe_service.get_premium_price_id()
 
+        # Cancel any previous incomplete subscription in Stripe
+        if sub and sub.stripe_subscription_id:
+            try:
+                old_sub = stripe_lib.Subscription.retrieve(sub.stripe_subscription_id)
+                if old_sub.status in ("incomplete", "incomplete_expired"):
+                    stripe_lib.Subscription.cancel(sub.stripe_subscription_id)
+            except Exception:
+                pass  # Old sub might not exist anymore
+
         subscription = stripe_lib.Subscription.create(
             customer=customer_id,
             items=[{"price": price_id}],
@@ -125,6 +135,12 @@ async def create_embedded_subscription(
             expand=["latest_invoice.payment_intent"],
             metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
         )
+
+        # Extract client_secret safely
+        invoice = subscription.latest_invoice
+        pi = invoice.payment_intent if invoice else None
+        if not pi or not pi.client_secret:
+            raise ValueError("No se pudo obtener el client_secret del payment intent.")
 
         # Save customer ID early
         if not sub:
@@ -142,7 +158,7 @@ async def create_embedded_subscription(
         await db.commit()
 
         return EmbeddedCheckoutResponse(
-            client_secret=subscription.latest_invoice.payment_intent.client_secret,
+            client_secret=pi.client_secret,
             subscription_id=subscription.id,
             customer_id=customer_id,
         )
