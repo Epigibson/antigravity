@@ -43,6 +43,13 @@ import type { ProjectResponse, AuditEntry, SkillResponse } from "@/lib/api";
 /* ─── Tool definitions ─── */
 const TOOL_CATALOG = [
   {
+    id: "git", label: "Git", icon: "📦", fields: ["account"],
+    credentials: [
+      { key: "user_name", label: "Nombre (user.name)", placeholder: "Ricardo Minor" },
+      { key: "user_email", label: "Email (user.email)", placeholder: "ricardo@example.com", help: "Se configura automáticamente con nexus switch vía git config" },
+    ]
+  },
+  {
     id: "gh", label: "GitHub", icon: "🐙", fields: ["account", "org"],
     credentials: [{ key: "token", label: "Personal Access Token (GH_TOKEN)", placeholder: "ghp_xxxxxxxxxxxx", help: "Genera uno en github.com/settings/tokens con permisos: repo, read:org" }]
   },
@@ -63,6 +70,13 @@ const TOOL_CATALOG = [
   {
     id: "vercel", label: "Vercel", icon: "▲", fields: ["account", "org"],
     credentials: [{ key: "token", label: "Vercel Token", placeholder: "xxxxxxxxxxxxxxxx", help: "Genera uno en vercel.com/account/tokens" }]
+  },
+  {
+    id: "stripe", label: "Stripe", icon: "💳", fields: ["account"],
+    credentials: [
+      { key: "secret_key", label: "Secret Key (sk_test / sk_live)", placeholder: "sk_test_51TEz...", help: "Disponible en dashboard.stripe.com/apikeys" },
+      { key: "publishable_key", label: "Publishable Key", placeholder: "pk_test_51TEz..." },
+    ]
   },
   {
     id: "railway", label: "Railway", icon: "🚂", fields: ["account"],
