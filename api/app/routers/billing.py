@@ -89,6 +89,7 @@ async def create_embedded_subscription(
 ):
     """Create an incomplete subscription for embedded payment via Stripe Elements."""
     import stripe as stripe_lib
+    import traceback
     stripe_lib.api_key = settings.stripe_secret_key
 
     if not settings.stripe_secret_key:
@@ -97,36 +98,42 @@ async def create_embedded_subscription(
     if user.plan == "premium":
         raise HTTPException(status_code=400, detail="Ya tienes el plan Premium")
 
-    org_id = await _get_user_org_id(user, db)
-
-    # Get or create Stripe customer
-    result = await db.execute(
-        select(Subscription).where(Subscription.org_id == org_id)
-    )
-    sub = result.scalar_one_or_none()
-
-    if sub and sub.stripe_customer_id:
-        customer_id = sub.stripe_customer_id
-    else:
-        customer = stripe_lib.Customer.create(
-            email=user.email,
-            name=user.display_name or user.email,
-            metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
-        )
-        customer_id = customer.id
-
     try:
-        price_id = stripe_service.get_premium_price_id()
+        print(f"💳 Step 1: Getting org for user {user.id}")
+        org_id = await _get_user_org_id(user, db)
+        print(f"💳 Step 2: org_id = {org_id}")
 
-        # Cancel any previous incomplete subscription in Stripe
+        result = await db.execute(
+            select(Subscription).where(Subscription.org_id == org_id)
+        )
+        sub = result.scalar_one_or_none()
+        print(f"💳 Step 3: existing sub = {sub.id if sub else 'None'}")
+
+        if sub and sub.stripe_customer_id:
+            customer_id = sub.stripe_customer_id
+        else:
+            customer = stripe_lib.Customer.create(
+                email=user.email,
+                name=user.display_name or user.email,
+                metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
+            )
+            customer_id = customer.id
+        print(f"💳 Step 4: customer_id = {customer_id}")
+
+        price_id = stripe_service.get_premium_price_id()
+        print(f"💳 Step 5: price_id = {price_id}")
+
+        # Cancel stale incomplete subs
         if sub and sub.stripe_subscription_id:
             try:
                 old_sub = stripe_lib.Subscription.retrieve(sub.stripe_subscription_id)
                 if old_sub.status in ("incomplete", "incomplete_expired"):
                     stripe_lib.Subscription.cancel(sub.stripe_subscription_id)
-            except Exception:
-                pass  # Old sub might not exist anymore
+                    print(f"💳 Cancelled stale sub {sub.stripe_subscription_id}")
+            except Exception as ce:
+                print(f"💳 Could not cancel old sub: {ce}")
 
+        print(f"💳 Step 6: Creating Stripe subscription...")
         subscription = stripe_lib.Subscription.create(
             customer=customer_id,
             items=[{"price": price_id}],
@@ -135,14 +142,16 @@ async def create_embedded_subscription(
             expand=["latest_invoice.payment_intent"],
             metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
         )
+        print(f"💳 Step 7: sub={subscription.id} status={subscription.status}")
 
-        # Extract client_secret safely
         invoice = subscription.latest_invoice
-        pi = invoice.payment_intent if invoice else None
-        if not pi or not pi.client_secret:
-            raise ValueError("No se pudo obtener el client_secret del payment intent.")
+        pi = getattr(invoice, 'payment_intent', None) if invoice else None
+        cs = getattr(pi, 'client_secret', None) if pi else None
+        print(f"💳 Step 8: invoice={getattr(invoice, 'id', None)} pi={getattr(pi, 'id', None)} cs={'yes' if cs else 'NO'}")
 
-        # Save customer ID early
+        if not cs:
+            raise ValueError(f"No client_secret. pi={pi}, invoice_status={getattr(invoice, 'status', 'N/A')}")
+
         if not sub:
             sub = Subscription(
                 org_id=org_id,
@@ -156,13 +165,17 @@ async def create_embedded_subscription(
             sub.stripe_customer_id = customer_id
             sub.stripe_subscription_id = subscription.id
         await db.commit()
+        print(f"💳 Step 9: DB saved ✅")
 
         return EmbeddedCheckoutResponse(
-            client_secret=pi.client_secret,
+            client_secret=cs,
             subscription_id=subscription.id,
             customer_id=customer_id,
         )
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"💳 ❌ ERROR: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error creando suscripción: {str(e)}")
 
 @router.post("/checkout", response_model=CheckoutResponse)
