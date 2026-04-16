@@ -433,6 +433,56 @@ func (m *MongoProfiler) ListProfiles() ([]string, error) {
 }
 
 // ============================================================================
+// Stripe CLI Profiler
+// ============================================================================
+
+// StripeProfiler manages Stripe CLI account switching.
+// Sets STRIPE_API_KEY in the environment for the Stripe CLI to use.
+type StripeProfiler struct{}
+
+func NewStripeProfiler() *StripeProfiler { return &StripeProfiler{} }
+
+func (s *StripeProfiler) ToolName() string { return "stripe" }
+
+func (s *StripeProfiler) IsInstalled() bool {
+	_, err := exec.LookPath("stripe")
+	return err == nil
+}
+
+func (s *StripeProfiler) CurrentProfile() (string, error) {
+	if key := os.Getenv("STRIPE_API_KEY"); key != "" {
+		if len(key) > 12 {
+			return key[:12] + "...", nil
+		}
+		return key, nil
+	}
+	return "none", nil
+}
+
+func (s *StripeProfiler) Switch(profile domain.CLIProfile) error {
+	// Set the secret key from Extra["secret_key"] or account field
+	if profile.Extra != nil {
+		if sk, ok := profile.Extra["secret_key"]; ok && sk != "" {
+			os.Setenv("STRIPE_API_KEY", sk)
+			os.Setenv("STRIPE_SECRET_KEY", sk)
+		}
+		if pk, ok := profile.Extra["publishable_key"]; ok && pk != "" {
+			os.Setenv("STRIPE_PUBLISHABLE_KEY", pk)
+		}
+	}
+
+	// Account field is treated as the Stripe account ID (for Connect)
+	if profile.Account != "" {
+		os.Setenv("STRIPE_ACCOUNT", profile.Account)
+	}
+
+	return nil
+}
+
+func (s *StripeProfiler) ListProfiles() ([]string, error) {
+	return []string{"(managed via env vars)"}, nil
+}
+// ============================================================================
 // Registry — Factory for all profilers
 // ============================================================================
 
@@ -457,5 +507,6 @@ func AllProfilers() []interface {
 		NewSupabaseProfiler(),
 		NewVercelProfiler(),
 		NewMongoProfiler(),
+		NewStripeProfiler(),
 	}
 }

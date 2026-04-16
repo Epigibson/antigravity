@@ -18,8 +18,8 @@ router = APIRouter(prefix="/billing", tags=["Billing"])
 # ─── Request/Response schemas ───
 
 class CheckoutRequest(BaseModel):
-    success_url: str = "http://localhost:3000/dashboard/billing?status=success"
-    cancel_url: str = "http://localhost:3000/dashboard/billing?status=cancelled"
+    success_url: str | None = None
+    cancel_url: str | None = None
 
 
 class CheckoutResponse(BaseModel):
@@ -61,12 +61,15 @@ async def create_checkout(
     customer_id = sub.stripe_customer_id if sub else None
 
     try:
+        base = body.success_url or f"{settings.frontend_url}/dashboard/billing?status=success"
+        cancel = body.cancel_url or f"{settings.frontend_url}/dashboard/billing?status=cancelled"
+
         checkout_url = stripe_service.create_checkout_session(
             user_id=user.id,
             user_email=user.email,
             stripe_customer_id=customer_id,
-            success_url=body.success_url,
-            cancel_url=body.cancel_url,
+            success_url=base,
+            cancel_url=cancel,
         )
         return CheckoutResponse(checkout_url=checkout_url)
     except Exception as e:
@@ -93,7 +96,7 @@ async def create_portal(
     try:
         portal_url = stripe_service.create_portal_session(
             stripe_customer_id=sub.stripe_customer_id,
-            return_url="http://localhost:3000/dashboard/billing",
+            return_url=f"{settings.frontend_url}/dashboard/billing",
         )
         return PortalResponse(portal_url=portal_url)
     except Exception as e:

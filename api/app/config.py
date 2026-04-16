@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     stripe_webhook_secret: Optional[str] = None
     stripe_premium_price_id: Optional[str] = None  # "auto" = create on boot
 
+    # Frontend
+    frontend_url: str = "http://localhost:3000"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors(cls, v):

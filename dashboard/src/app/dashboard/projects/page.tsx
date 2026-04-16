@@ -22,11 +22,13 @@ import { api } from "@/lib/api";
 import type { ProjectResponse } from "@/lib/api";
 
 const toolIcons: Record<string, string> = {
+  git: "Git",
   gh: "GitHub",
   aws: "AWS",
   supabase: "Supabase",
   vercel: "Vercel",
   mongosh: "MongoDB",
+  stripe: "Stripe",
 };
 
 function slugify(text: string): string {
