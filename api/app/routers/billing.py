@@ -87,7 +87,7 @@ async def create_embedded_subscription(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create an embedded Stripe Checkout session for upgrading to Premium."""
+    """Create a SetupIntent for collecting payment method, then subscribe."""
     import stripe as stripe_lib
     stripe_lib.api_key = settings.stripe_secret_key
 
@@ -100,38 +100,49 @@ async def create_embedded_subscription(
     try:
         org_id = await _get_user_org_id(user, db)
 
-        # Get existing customer ID
+        # Get existing subscription record
         result = await db.execute(
             select(Subscription).where(Subscription.org_id == org_id)
         )
         sub = result.scalar_one_or_none()
-        customer_id = sub.stripe_customer_id if sub and sub.stripe_customer_id else None
 
-        price_id = stripe_service.get_premium_price_id()
-
-        # Build session params
-        session_params = {
-            "ui_mode": "embedded",
-            "mode": "subscription",
-            "line_items": [{"price": price_id, "quantity": 1}],
-            "return_url": f"{settings.frontend_url}/dashboard/billing?status=success",
-            "metadata": {"nexus_user_id": user.id, "nexus_org_id": org_id},
-            "subscription_data": {
-                "metadata": {"nexus_user_id": user.id, "nexus_org_id": org_id},
-            },
-        }
-
-        if customer_id:
-            session_params["customer"] = customer_id
+        # Get or create Stripe customer
+        if sub and sub.stripe_customer_id:
+            customer_id = sub.stripe_customer_id
         else:
-            session_params["customer_email"] = user.email
+            customer = stripe_lib.Customer.create(
+                email=user.email,
+                name=user.display_name or user.email,
+                metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
+            )
+            customer_id = customer.id
+            # Save customer ID early
+            if not sub:
+                sub = Subscription(
+                    org_id=org_id,
+                    stripe_customer_id=customer_id,
+                    plan="free",
+                    status=SubscriptionStatus.incomplete,
+                )
+                db.add(sub)
+            else:
+                sub.stripe_customer_id = customer_id
+            await db.commit()
 
-        session = stripe_lib.checkout.Session.create(**session_params)
+        # Create SetupIntent for collecting payment method
+        setup_intent = stripe_lib.SetupIntent.create(
+            customer=customer_id,
+            payment_method_types=["card"],
+            metadata={
+                "nexus_user_id": user.id,
+                "nexus_org_id": org_id,
+            },
+        )
 
         return EmbeddedCheckoutResponse(
-            client_secret=session.client_secret,
-            subscription_id=session.id,
-            customer_id=customer_id or "",
+            client_secret=setup_intent.client_secret,
+            subscription_id=setup_intent.id,
+            customer_id=customer_id,
         )
     except HTTPException:
         raise
@@ -139,6 +150,85 @@ async def create_embedded_subscription(
         import traceback
         print(f"💳 ❌ ERROR: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error creando suscripción: {str(e)}")
+
+
+class ConfirmSubscriptionRequest(BaseModel):
+    setup_intent_id: str
+
+
+@router.post("/confirm-subscription")
+async def confirm_subscription(
+    body: ConfirmSubscriptionRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """After SetupIntent succeeds, create the actual subscription with the collected payment method."""
+    import stripe as stripe_lib
+    stripe_lib.api_key = settings.stripe_secret_key
+
+    try:
+        # Retrieve the SetupIntent to get the payment method
+        setup_intent = stripe_lib.SetupIntent.retrieve(body.setup_intent_id)
+        payment_method_id = setup_intent.payment_method
+        customer_id = setup_intent.customer
+
+        if not payment_method_id:
+            raise ValueError("No payment method collected")
+
+        # Attach payment method as default
+        stripe_lib.Customer.modify(
+            customer_id,
+            invoice_settings={"default_payment_method": payment_method_id},
+        )
+
+        # Create the subscription
+        price_id = stripe_service.get_premium_price_id()
+        org_id = setup_intent.metadata.get("nexus_org_id", "")
+
+        subscription = stripe_lib.Subscription.create(
+            customer=customer_id,
+            items=[{"price": price_id}],
+            default_payment_method=payment_method_id,
+            metadata={
+                "nexus_user_id": user.id,
+                "nexus_org_id": org_id,
+            },
+        )
+
+        # Update DB
+        result = await db.execute(
+            select(Subscription).where(Subscription.org_id == org_id)
+        )
+        sub = result.scalar_one_or_none()
+        if sub:
+            sub.stripe_subscription_id = subscription.id
+            sub.stripe_customer_id = customer_id
+            sub.plan = "premium"
+            sub.status = SubscriptionStatus.active
+        else:
+            sub = Subscription(
+                org_id=org_id,
+                stripe_customer_id=customer_id,
+                stripe_subscription_id=subscription.id,
+                plan="premium",
+                status=SubscriptionStatus.active,
+            )
+            db.add(sub)
+
+        # Update user plan
+        result = await db.execute(select(User).where(User.id == user.id))
+        u = result.scalar_one_or_none()
+        if u:
+            u.plan = "premium"
+
+        await db.commit()
+        print(f"💳 ✅ User {user.id} upgraded to Premium via embedded checkout!")
+
+        return {"status": "active", "subscription_id": subscription.id}
+    except Exception as e:
+        import traceback
+        print(f"💳 ❌ Confirm error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error activando suscripción: {str(e)}")
 
 @router.post("/checkout", response_model=CheckoutResponse)
 async def create_checkout(

@@ -353,6 +353,15 @@ export const api = {
     return handleResponse<{ client_secret: string; subscription_id: string; customer_id: string }>(res);
   },
 
+  async confirmSubscription(setupIntentId: string): Promise<{ status: string; subscription_id: string }> {
+    const res = await fetch(`${API_BASE}/billing/confirm-subscription`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ setup_intent_id: setupIntentId }),
+    });
+    return handleResponse<{ status: string; subscription_id: string }>(res);
+  },
+
   async createCheckout(successUrl: string, cancelUrl: string): Promise<{ checkout_url: string }> {
     const res = await fetch(`${API_BASE}/billing/checkout`, {
       method: "POST",
