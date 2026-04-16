@@ -8,11 +8,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
+from app.models.organization import Organization
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.middleware.auth import get_current_user
 from app.services import stripe_service
 
 router = APIRouter(prefix="/billing", tags=["Billing"])
+
+
+async def _get_user_org_id(user: User, db: AsyncSession) -> str:
+    """Get the user's primary organization ID. Create a default org if none exists."""
+    result = await db.execute(
+        select(Organization).where(Organization.owner_id == user.id).limit(1)
+    )
+    org = result.scalar_one_or_none()
+    if org:
+        return org.id
+    # Auto-create personal org
+    import uuid
+    org = Organization(
+        id=str(uuid.uuid4()),
+        name=f"{user.display_name or user.email}'s Org",
+        slug=f"org-{user.id[:8]}",
+        owner_id=user.id,
+        plan=user.plan,
+    )
+    db.add(org)
+    await db.flush()
+    return org.id
 
 
 # ─── Request/Response schemas ───
@@ -73,9 +96,11 @@ async def create_embedded_subscription(
     if user.plan == "premium":
         raise HTTPException(status_code=400, detail="Ya tienes el plan Premium")
 
+    org_id = await _get_user_org_id(user, db)
+
     # Get or create Stripe customer
     result = await db.execute(
-        select(Subscription).where(Subscription.org_id == user.id)
+        select(Subscription).where(Subscription.org_id == org_id)
     )
     sub = result.scalar_one_or_none()
 
@@ -85,7 +110,7 @@ async def create_embedded_subscription(
         customer = stripe_lib.Customer.create(
             email=user.email,
             name=user.display_name or user.email,
-            metadata={"nexus_user_id": user.id},
+            metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
         )
         customer_id = customer.id
 
@@ -98,13 +123,13 @@ async def create_embedded_subscription(
             payment_behavior="default_incomplete",
             payment_settings={"save_default_payment_method": "on_subscription"},
             expand=["latest_invoice.payment_intent"],
-            metadata={"nexus_user_id": user.id},
+            metadata={"nexus_user_id": user.id, "nexus_org_id": org_id},
         )
 
         # Save customer ID early
         if not sub:
             sub = Subscription(
-                org_id=user.id,
+                org_id=org_id,
                 stripe_customer_id=customer_id,
                 stripe_subscription_id=subscription.id,
                 plan="free",
@@ -137,9 +162,11 @@ async def create_checkout(
     if user.plan == "premium":
         raise HTTPException(status_code=400, detail="Ya tienes el plan Premium")
 
+    org_id = await _get_user_org_id(user, db)
+
     # Check if user has an existing Stripe customer ID
     result = await db.execute(
-        select(Subscription).where(Subscription.org_id == user.id)
+        select(Subscription).where(Subscription.org_id == org_id)
     )
     sub = result.scalar_one_or_none()
     customer_id = sub.stripe_customer_id if sub else None
@@ -169,8 +196,10 @@ async def create_portal(
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe no está configurado")
 
+    org_id = await _get_user_org_id(user, db)
+
     result = await db.execute(
-        select(Subscription).where(Subscription.org_id == user.id)
+        select(Subscription).where(Subscription.org_id == org_id)
     )
     sub = result.scalar_one_or_none()
 
@@ -193,8 +222,10 @@ async def get_subscription(
     db: AsyncSession = Depends(get_db),
 ):
     """Get current subscription details."""
+    org_id = await _get_user_org_id(user, db)
+
     result = await db.execute(
-        select(Subscription).where(Subscription.org_id == user.id)
+        select(Subscription).where(Subscription.org_id == org_id)
     )
     sub = result.scalar_one_or_none()
 
