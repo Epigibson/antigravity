@@ -12,6 +12,13 @@ class CLIProfileSchema(BaseModel):
     status: str = Field(default="connected", examples=["connected"])
 
 
+class ScriptHookSchema(BaseModel):
+    name: str = Field(..., examples=["Run migrations"])
+    command: str = Field(..., examples=["npm run migrate"])
+    phase: str = Field(default="post", examples=["pre", "post"])
+    timeout: int = Field(default=30, examples=[30])
+
+
 class EnvironmentSchema(BaseModel):
     id: str
     name: str
@@ -21,6 +28,7 @@ class EnvironmentSchema(BaseModel):
     env_var_keys: list[str] = []  # just the keys, for display
     env_vars: dict[str, str] = {}  # full key-value pairs
     cli_profiles: list[CLIProfileSchema] = []
+    hooks: list[ScriptHookSchema] = []
 
     model_config = {"from_attributes": True}
 
@@ -74,9 +82,11 @@ class EnvironmentCreate(BaseModel):
     git_branch: str | None = Field(None, examples=["develop"])
     env_vars: dict[str, str] = Field(default_factory=dict)
     cli_profiles: list[CLIProfileSchema] = Field(default_factory=list)
+    hooks: list[ScriptHookSchema] = Field(default_factory=list)
 
 
 class EnvironmentUpdate(BaseModel):
     git_branch: str | None = None
     env_vars: dict[str, str] | None = None
     cli_profiles: list[CLIProfileSchema] | None = None
+    hooks: list[ScriptHookSchema] | None = None

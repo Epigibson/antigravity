@@ -10,7 +10,7 @@ from app.models.environment import EnvironmentProfile
 from app.schemas.project import (
     ProjectResponse, ProjectCreate, ProjectUpdate,
     EnvironmentSchema, EnvironmentCreate, EnvironmentUpdate,
-    CLIProfileSchema, SkillSchema,
+    CLIProfileSchema, SkillSchema, ScriptHookSchema,
 )
 from app.services.project_service import (
     list_projects, get_project_by_slug, create_project,
@@ -32,6 +32,7 @@ def _mask_value(v: str) -> str:
 
 def _env_to_schema(env: EnvironmentProfile) -> EnvironmentSchema:
     profiles = [CLIProfileSchema(**p) for p in (env.cli_profiles or [])]
+    hooks = [ScriptHookSchema(**h) for h in (env.hooks or [])]
     raw_vars = env.env_vars or {}
     return EnvironmentSchema(
         id=env.id,
@@ -42,12 +43,14 @@ def _env_to_schema(env: EnvironmentProfile) -> EnvironmentSchema:
         env_var_keys=list(raw_vars.keys()),
         env_vars={k: _mask_value(v) for k, v in raw_vars.items()},
         cli_profiles=profiles,
+        hooks=hooks,
     )
 
 
 def _env_to_schema_unmasked(env: EnvironmentProfile) -> EnvironmentSchema:
     """Return env vars WITHOUT masking — used by CLI endpoint only."""
     profiles = [CLIProfileSchema(**p) for p in (env.cli_profiles or [])]
+    hooks = [ScriptHookSchema(**h) for h in (env.hooks or [])]
     raw_vars = env.env_vars or {}
     return EnvironmentSchema(
         id=env.id,
@@ -58,6 +61,7 @@ def _env_to_schema_unmasked(env: EnvironmentProfile) -> EnvironmentSchema:
         env_var_keys=list(raw_vars.keys()),
         env_vars=raw_vars,  # UNMASKED values for CLI
         cli_profiles=profiles,
+        hooks=hooks,
     )
 
 
@@ -216,6 +220,7 @@ async def create_env(slug: str, body: EnvironmentCreate, user: User = Depends(ge
         git_branch=body.git_branch,
         env_vars=body.env_vars,
         cli_profiles=[p.model_dump() for p in body.cli_profiles],
+        hooks=[h.model_dump() for h in body.hooks],
     )
     db.add(env)
     await db.commit()
@@ -244,6 +249,8 @@ async def update_env(slug: str, env_name: str, body: EnvironmentUpdate,
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
         env.cli_profiles = [p.model_dump() for p in body.cli_profiles]
+    if body.hooks is not None:
+        env.hooks = [h.model_dump() for h in body.hooks]
 
     await db.commit()
     return _env_to_schema(env)

@@ -74,6 +74,13 @@ export interface CLIProfile {
   status: string;
 }
 
+export interface ScriptHook {
+  name: string;
+  command: string;
+  phase: "pre" | "post";
+  timeout: number;
+}
+
 export interface EnvironmentResponse {
   id: string;
   name: string;
@@ -83,6 +90,7 @@ export interface EnvironmentResponse {
   env_var_keys: string[];
   env_vars: Record<string, string>;
   cli_profiles: CLIProfile[];
+  hooks: ScriptHook[];
 }
 
 export interface SkillResponse {

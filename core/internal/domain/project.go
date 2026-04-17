@@ -24,6 +24,14 @@ type CLIProfile struct {
 	Extra   map[string]string `yaml:"extra,omitempty" json:"extra,omitempty"` // Tool-specific config
 }
 
+// ScriptHook defines a command to run pre or post context switch.
+type ScriptHook struct {
+	Name    string `yaml:"name" json:"name"`        // Display name
+	Command string `yaml:"command" json:"command"`  // Shell command to execute
+	Phase   string `yaml:"phase" json:"phase"`      // "pre" or "post"
+	Timeout int    `yaml:"timeout,omitempty" json:"timeout,omitempty"` // seconds, 0 = no timeout
+}
+
 // EnvironmentConfig holds the full context for a given environment
 // within a project: branch, env vars, and CLI profiles.
 type EnvironmentConfig struct {
@@ -31,6 +39,7 @@ type EnvironmentConfig struct {
 	Branch       string            `yaml:"branch" json:"branch"`
 	EnvVars      map[string]string `yaml:"env" json:"env"`
 	CLIProfiles  []CLIProfile      `yaml:"cli_profiles" json:"cli_profiles"`
+	Hooks        []ScriptHook      `yaml:"hooks,omitempty" json:"hooks,omitempty"`
 }
 
 // Project is the top-level entity representing a development project.

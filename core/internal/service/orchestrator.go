@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -85,11 +87,15 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 	o.logAudit(domain.AuditActionSwitch, project.Name, envName, "",
 		fmt.Sprintf("Starting context switch to %s/%s", project.Name, envName), true)
 
-	// 4. Get enabled skills sorted by priority
+	// 4. Run PRE-switch hooks
+	preResults := o.runHooks(project, env, envName, "pre")
+
+	// 5. Get enabled skills sorted by priority
 	skills := project.GetEnabledSkills()
 
-	// 5. Execute each skill
-	results := make([]domain.SkillResult, 0, len(skills))
+	// 6. Execute each skill
+	results := make([]domain.SkillResult, 0, len(skills)+len(preResults))
+	results = append(results, preResults...)
 	var shellLines []string
 
 	// Header for shell script
@@ -116,11 +122,15 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 			skill.Name, result.Message, result.IsSuccess())
 	}
 
-	// 6. Handle CLI profile switching
+	// 7. Handle CLI profile switching
 	cliResults := o.switchCLIProfiles(project, env, envName)
 	results = append(results, cliResults...)
 
-	// 7. Aggregate results
+	// 8. Run POST-switch hooks
+	postResults := o.runHooks(project, env, envName, "post")
+	results = append(results, postResults...)
+
+	// 9. Aggregate results
 	allSuccess := true
 	for _, r := range results {
 		if r.Status == domain.SkillStatusFailed {
@@ -131,7 +141,7 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 
 	totalDuration := time.Since(startTime)
 
-	// 8. Final audit log
+	// 10. Final audit log
 	o.logAudit(domain.AuditActionSwitch, project.Name, envName, "",
 		fmt.Sprintf("Context switch completed in %dms (success=%v)", totalDuration.Milliseconds(), allSuccess),
 		allSuccess)
@@ -268,4 +278,60 @@ func (o *Orchestrator) GetInstalledTools() map[string]bool {
 		installed[name] = profiler.IsInstalled()
 	}
 	return installed
+}
+
+// runHooks executes script hooks for a given phase ("pre" or "post").
+func (o *Orchestrator) runHooks(project *domain.Project, env *domain.EnvironmentConfig, envName, phase string) []domain.SkillResult {
+	var results []domain.SkillResult
+
+	for _, hook := range env.Hooks {
+		if hook.Phase != phase {
+			continue
+		}
+
+		startTime := time.Now()
+		skillName := fmt.Sprintf("hook:%s:%s", phase, hook.Name)
+
+		// Set timeout (default 30s)
+		timeout := time.Duration(hook.Timeout) * time.Second
+		if timeout <= 0 {
+			timeout = 30 * time.Second
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		cmd := exec.CommandContext(ctx, "sh", "-c", hook.Command)
+
+		// Run from project root if available
+		if project.RootPath != "" {
+			cmd.Dir = project.RootPath
+		}
+
+		output, err := cmd.CombinedOutput()
+		cancel()
+
+		if err != nil {
+			results = append(results, domain.SkillResult{
+				SkillName: skillName,
+				Status:    domain.SkillStatusFailed,
+				Message:   fmt.Sprintf("Hook '%s' failed: %v (output: %s)", hook.Name, err, strings.TrimSpace(string(output))),
+				Duration:  time.Since(startTime),
+				Error:     err,
+			})
+			o.logAudit(domain.AuditAction("script_"+phase), project.Name, envName, hook.Name,
+				fmt.Sprintf("Hook '%s' failed: %v", hook.Name, err), false)
+			continue
+		}
+
+		results = append(results, domain.SkillResult{
+			SkillName: skillName,
+			Status:    domain.SkillStatusSuccess,
+			Message:   fmt.Sprintf("Hook '%s' completed successfully", hook.Name),
+			Duration:  time.Since(startTime),
+			Actions:   []string{strings.TrimSpace(string(output))},
+		})
+		o.logAudit(domain.AuditAction("script_"+phase), project.Name, envName, hook.Name,
+			fmt.Sprintf("Hook '%s' completed in %dms", hook.Name, time.Since(startTime).Milliseconds()), true)
+	}
+
+	return results
 }

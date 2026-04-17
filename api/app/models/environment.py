@@ -34,6 +34,7 @@ class EnvironmentProfile(Base):
     env_vars: Mapped[dict | None] = mapped_column(JSON, default=dict)
     cli_profiles: Mapped[list | None] = mapped_column(JSON, default=list)
     cloud_config: Mapped[dict | None] = mapped_column(JSON, default=dict)
+    hooks: Mapped[list | None] = mapped_column(JSON, default=list)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
