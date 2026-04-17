@@ -99,9 +99,10 @@ export default function TeamPage() {
     }
   };
 
-  const isPremium = planLimits?.plan === "premium";
+  const isPaidPlan = planLimits?.plan === "premium" || planLimits?.plan === "enterprise";
   const maxMembers = (planLimits?.limits?.max_members as number) || 1;
   const currentMembers = members.length;
+  const isUnlimited = maxMembers > 9999;
 
   if (loading) {
     return (
@@ -125,7 +126,7 @@ export default function TeamPage() {
       </div>
 
       {/* Plan banner */}
-      {!isPremium && (
+      {!isPaidPlan && (
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
           <Lock className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
           <div>
@@ -146,7 +147,7 @@ export default function TeamPage() {
           <p className="text-xs text-muted-foreground">Miembros</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-2xl font-bold font-mono">{maxMembers}</p>
+          <p className="text-2xl font-bold font-mono">{isUnlimited ? "∞" : maxMembers}</p>
           <p className="text-xs text-muted-foreground">Máximo del plan</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
@@ -156,7 +157,7 @@ export default function TeamPage() {
       </div>
 
       {/* Invite form */}
-      {isPremium && (
+      {isPaidPlan && (
         <div className="rounded-xl border border-border bg-card p-5">
           <h2 className="text-sm font-semibold flex items-center gap-2 mb-4">
             <UserPlus className="h-4 w-4 text-primary" />
@@ -252,7 +253,7 @@ export default function TeamPage() {
                 </div>
 
                 {/* Actions */}
-                {isPremium && !isOwner && !isSelf && (
+                {isPaidPlan && !isOwner && !isSelf && (
                   <div className="flex items-center gap-1">
                     <select
                       value={member.role}
