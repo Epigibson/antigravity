@@ -4,6 +4,7 @@ Supports both SQLite (local development) and PostgreSQL (Supabase production).
 Switch by changing DATABASE_URL in .env.
 """
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
@@ -62,3 +63,25 @@ async def init_db():
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Auto-migrate: add missing columns to existing tables
+    await _auto_migrate()
+
+
+async def _auto_migrate():
+    """Safely add missing columns to existing tables (idempotent)."""
+    migrations = [
+        # (table, column, sql_type, default)
+        ("environment_profiles", "hooks", "JSON", "'[]'"),
+    ]
+
+    async with engine.begin() as conn:
+        for table, column, sql_type, default in migrations:
+            try:
+                await conn.execute(
+                    text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {sql_type} DEFAULT {default}")
+                )
+                print(f"  ✅ Migration: {table}.{column} ensured")
+            except Exception as e:
+                # Column might already exist or DB doesn't support IF NOT EXISTS
+                print(f"  ⚠️ Migration {table}.{column}: {e}")
