@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   title: "Nexus — Control Center",
   description:
     "Centro de Control de Entornos de Desarrollo. Cambia toda tu identidad de desarrollo con un solo comando.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "Nexus — Control Center",
+    description: "Elimina la fricción del context switching. Un solo comando para cambiar toda tu identidad de desarrollo.",
+    images: ["/nexus-logo.png"],
+  },
 };
 
 export default function RootLayout({

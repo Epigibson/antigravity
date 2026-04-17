@@ -78,8 +78,8 @@ export default function DashboardLayout({
       >
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 px-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg gradient-violet">
-            <Zap className="h-5 w-5 text-white" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+            <img src="/nexus-icon.png" alt="Nexus" className="h-9 w-9 object-cover" />
           </div>
           {!collapsed && (
             <div className="flex flex-col overflow-hidden">

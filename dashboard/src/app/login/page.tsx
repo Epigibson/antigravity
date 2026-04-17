@@ -50,8 +50,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl gradient-violet shadow-lg shadow-primary/25 mb-4">
-            <Zap className="h-7 w-7 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/25 mb-4">
+            <img src="/nexus-icon.png" alt="Nexus" className="h-14 w-14 object-cover" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Nexus</h1>
           <p className="mt-1 text-sm text-muted-foreground">
