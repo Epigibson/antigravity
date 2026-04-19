@@ -153,6 +153,11 @@ func (g *GitSwitcher) Execute(project *domain.Project, env *domain.EnvironmentCo
 		}, nil
 	}
 
+	// Fetch first in case branch only exists in remote
+	fetchCmd := exec.Command("git", "fetch")
+	fetchCmd.Dir = project.RootPath
+	_ = fetchCmd.Run()
+
 	// Checkout target branch
 	cmd := exec.Command("git", "checkout", env.Branch)
 	cmd.Dir = project.RootPath

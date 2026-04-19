@@ -197,7 +197,14 @@ func switchFromAPI(projectDTO *repository.ProjectDTO, envName string) error {
 
 	// ── Git branch ──
 	if targetEnv.GitBranch != "" {
+		cwd, _ := os.Getwd()
+
+		fetchCmd := exec.Command("git", "fetch")
+		fetchCmd.Dir = cwd
+		_ = fetchCmd.Run()
+
 		cmd := exec.Command("git", "checkout", targetEnv.GitBranch)
+		cmd.Dir = cwd
 		if output, err := cmd.CombinedOutput(); err != nil {
 			results = append(results, fmt.Sprintf("  ❌ git branch — failed: %v (%s)", err, strings.TrimSpace(string(output))))
 		} else {
