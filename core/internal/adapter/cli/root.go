@@ -33,6 +33,7 @@ func NewRootCmd() *cobra.Command {
 
   Usage:
     nexus switch <project> [--env environment]
+    nexus setup-shell
     nexus init
     nexus list
     nexus profiles <project>`,
@@ -46,6 +47,7 @@ func NewRootCmd() *cobra.Command {
 	// Add subcommands
 	rootCmd.AddCommand(newSwitchCmd())
 	rootCmd.AddCommand(newInitCmd())
+	rootCmd.AddCommand(newSetupShellCmd())
 	rootCmd.AddCommand(newListCmd())
 	rootCmd.AddCommand(newProfilesCmd())
 	rootCmd.AddCommand(newCurrentCmd())

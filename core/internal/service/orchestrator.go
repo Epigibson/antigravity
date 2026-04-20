@@ -105,6 +105,11 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 		fmt.Sprintf("Generated at: %s", time.Now().Format(time.RFC3339))))
 	shellLines = append(shellLines, "")
 
+	// Inject hybrid state context variables
+	shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("NEXUS_ACTIVE_WORKSPACE", project.Name))
+	shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("NEXUS_ACTIVE_ENV", envName))
+	shellLines = append(shellLines, "")
+
 	for _, skill := range skills {
 		result := o.executeSkill(project, env, &skill)
 		results = append(results, *result)

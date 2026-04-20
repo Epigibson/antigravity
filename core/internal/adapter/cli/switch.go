@@ -13,6 +13,7 @@ import (
 	"github.com/nexus-dev/nexus/internal/adapter/config"
 	"github.com/nexus-dev/nexus/internal/adapter/executor"
 	"github.com/nexus-dev/nexus/internal/adapter/repository"
+	"github.com/nexus-dev/nexus/internal/adapter/state"
 	"github.com/nexus-dev/nexus/internal/domain"
 	"github.com/nexus-dev/nexus/internal/port"
 	"github.com/nexus-dev/nexus/internal/service"
@@ -194,6 +195,11 @@ func switchFromAPI(projectDTO *repository.ProjectDTO, envName string) error {
 			fmt.Sprintf("Generated at: %s", time.Now().Format(time.RFC3339))))
 		shellLines = append(shellLines, "")
 
+		// Inject hybrid state context variables
+		shellLines = append(shellLines, shellEmitter.EmitSetEnv("NEXUS_ACTIVE_WORKSPACE", projectDTO.Name))
+		shellLines = append(shellLines, shellEmitter.EmitSetEnv("NEXUS_ACTIVE_ENV", envName))
+		shellLines = append(shellLines, "")
+
 		for key, value := range allEnvVars {
 			shellLines = append(shellLines, shellEmitter.EmitSetEnv(key, value))
 		}
@@ -303,6 +309,14 @@ func switchFromAPI(projectDTO *repository.ProjectDTO, envName string) error {
 		DurationMs:  totalDuration.Milliseconds(),
 	})
 
+	if !hasErrors {
+		_ = state.SaveActiveState(domain.ActiveState{
+			ProjectName: projectDTO.Name,
+			Environment: envName,
+			Timestamp:   time.Now().UTC(),
+		})
+	}
+
 	return nil
 }
 
@@ -371,6 +385,14 @@ func switchLocal(args []string, envName string) error {
 		os.WriteFile(scriptPath, []byte(result.ShellScript), 0600)
 		fmt.Printf("\n  💡 Or source it directly:\n")
 		fmt.Printf("     . %s\n", scriptPath)
+	}
+
+	if result.Success {
+		_ = state.SaveActiveState(domain.ActiveState{
+			ProjectName: result.ProjectName,
+			Environment: result.Environment,
+			Timestamp:   time.Now().UTC(),
+		})
 	}
 
 	return nil
