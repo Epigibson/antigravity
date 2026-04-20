@@ -296,6 +296,20 @@ func switchFromAPI(projectDTO *repository.ProjectDTO, envName string) error {
 		})
 	}
 
+	// ── Send Audit Log ──
+	localLogger, _ := audit.NewFileLogger()
+	apiClient := repository.NewAPIClient(getAPIURL())
+	auditLog := audit.NewMultiLogger(localLogger, apiClient)
+	
+	_ = auditLog.Log(domain.AuditEntry{
+		Action:      domain.AuditActionSwitch,
+		ProjectName: projectDTO.Name,
+		Environment: envName,
+		Message:     fmt.Sprintf("Context switch completed in %dms (success=%v)", totalDuration.Milliseconds(), !hasErrors),
+		Success:     !hasErrors,
+		DurationMs:  totalDuration.Milliseconds(),
+	})
+
 	return nil
 }
 
