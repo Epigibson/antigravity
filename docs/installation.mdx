@@ -20,11 +20,20 @@ Go solo es necesario para compilar. El binario resultante no tiene dependencias 
 ## Instalación rápida
 
 <Tabs>
+  <Tab title="macOS / Linux">
+    La forma más rápida y automática. Este script compilará el código, lo instalará en tu PATH e inyectará el validador a tu shell actual.
+
+    ```bash
+    curl -sSL https://raw.githubusercontent.com/Epigibson/antigravity/master/install.sh | bash
+    ```
+
+    Si deseas hacerlo manual, puedes descargar el repositorio, entrar al directorio y compilar con `go build -o nexus ./cmd/nexus`.
+  </Tab>
   <Tab title="Windows">
     ```powershell
     # 1. Clonar y compilar
-    git clone https://github.com/Epigibson/nexus.git
-    cd nexus/core
+    git clone https://github.com/Epigibson/antigravity.git
+    cd antigravity/core
     go build -o nexus.exe ./cmd/nexus
 
     # 2. Instalar en ~/.nexus/bin
@@ -38,36 +47,6 @@ Go solo es necesario para compilar. El binario resultante no tiene dependencias 
         [System.Environment]::SetEnvironmentVariable("Path", "$path;$dir", "User")
         Write-Host "✅ Agregado al PATH. Reinicia tu terminal."
     }
-    ```
-  </Tab>
-  <Tab title="macOS (Homebrew)">
-    ```bash
-    # Por ahora, compilar desde fuente (Homebrew tap en desarrollo)
-    git clone https://github.com/Epigibson/nexus.git
-    cd nexus/core
-    go build -o nexus ./cmd/nexus
-
-    # Instalar
-    mkdir -p ~/.nexus/bin
-    mv nexus ~/.nexus/bin/
-    echo 'export PATH="$HOME/.nexus/bin:$PATH"' >> ~/.zshrc
-    source ~/.zshrc
-    ```
-  </Tab>
-  <Tab title="Linux">
-    ```bash
-    git clone https://github.com/Epigibson/nexus.git
-    cd nexus/core
-    go build -o nexus ./cmd/nexus
-
-    # Opción A: Instalar en home (sin sudo)
-    mkdir -p ~/.nexus/bin
-    mv nexus ~/.nexus/bin/
-    echo 'export PATH="$HOME/.nexus/bin:$PATH"' >> ~/.bashrc
-    source ~/.bashrc
-
-    # Opción B: Instalar global (con sudo)
-    sudo mv nexus /usr/local/bin/
     ```
   </Tab>
 </Tabs>
@@ -114,9 +93,10 @@ cp nexus ~/.nexus/bin/
     ```
   </Tab>
   <Tab title="macOS / Linux">
+    Ejecuta el script desinstalador que limpiará el cache, el binario global y el inyector de comandos en `~/.bashrc`:
+
     ```bash
-    rm -rf ~/.nexus
-    # Quitar la línea de PATH de ~/.zshrc o ~/.bashrc
+    curl -sSL https://raw.githubusercontent.com/Epigibson/antigravity/master/uninstall.sh | bash
     ```
   </Tab>
 </Tabs>
