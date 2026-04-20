@@ -235,6 +235,15 @@ export const api = {
     return handleResponse<ProjectResponse>(res);
   },
 
+  async updateProject(slug: string, data: { name?: string; description?: string; repo_url?: string }): Promise<ProjectResponse> {
+    const res = await fetch(`${API_BASE}/projects/${slug}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ProjectResponse>(res);
+  },
+
   async createProject(data: { name: string; slug: string; description?: string; repo_url?: string }): Promise<ProjectResponse> {
     const res = await fetch(`${API_BASE}/projects/`, {
       method: "POST",

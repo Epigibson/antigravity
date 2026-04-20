@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   GitBranch,
   Key,
@@ -121,6 +121,13 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<ProjectResponse | null>(null);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // Edit project modal
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [projectForm, setProjectForm] = useState({ name: "", description: "", repo_url: "" });
+  const [projectSaving, setProjectSaving] = useState(false);
+  const [projectError, setProjectError] = useState("");
 
   // Env modal
   const [showEnvModal, setShowEnvModal] = useState(false);
@@ -317,6 +324,46 @@ export default function ProjectDetailPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  /* ── Project Modal Helpers ── */
+  const openProjectModal = () => {
+    if (!project) return;
+    setProjectForm({
+      name: project.name,
+      description: project.description || "",
+      repo_url: project.repo_url || "",
+    });
+    setProjectError("");
+    setShowProjectModal(true);
+  };
+
+  const handleProjectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProjectError("");
+    setProjectSaving(true);
+    try {
+      await api.updateProject(slug, projectForm);
+      setShowProjectModal(false);
+      await loadProject();
+    } catch (err: unknown) {
+      setProjectError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setProjectSaving(false);
+    }
+  };
+
+  const handleProjectDelete = async () => {
+    if (!project) return;
+    const confirm = window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el proyecto "${project.name}" y todos sus entornos? Esta acción es irreversible.`);
+    if (!confirm) return;
+    
+    try {
+      await api.deleteProject(slug);
+      router.push("/dashboard/projects");
+    } catch (err: unknown) {
+      setProjectError(err instanceof Error ? err.message : "Error al eliminar");
+    }
+  };
+
   if (loading || !project) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -353,7 +400,10 @@ export default function ProjectDetailPage() {
               <ExternalLink className="h-3.5 w-3.5" /> Repositorio
             </a>
           )}
-          <Button size="sm" className="gap-2 gradient-violet text-white border-0 hover:opacity-90">
+          <Button variant="outline" size="sm" className="gap-2 h-9" onClick={openProjectModal}>
+            <Pencil className="h-3.5 w-3.5" /> Editar
+          </Button>
+          <Button size="sm" className="gap-2 gradient-violet text-white border-0 hover:opacity-90 h-9">
             <ArrowRightLeft className="h-3.5 w-3.5" /> Switch Now
           </Button>
         </div>
@@ -1000,6 +1050,67 @@ export default function ProjectDetailPage() {
                 {varsSaving ? "Guardando..." : "Guardar Variables"}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Project Edit Modal ═══ */}
+      {showProjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowProjectModal(false)} />
+          <div className="relative w-full max-w-lg mx-4 rounded-xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <button onClick={() => setShowProjectModal(false)}
+              className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-violet text-white">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Editar Proyecto</h2>
+                <p className="text-sm text-muted-foreground">{project?.name}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleProjectSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="proj-name">Nombre</Label>
+                <Input id="proj-name" placeholder="Mi Proyecto" value={projectForm.name}
+                  onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="proj-desc">Descripción (opcional)</Label>
+                <Input id="proj-desc" placeholder="Backend de la app" value={projectForm.description}
+                  onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="proj-repo">URL del Repositorio (opcional)</Label>
+                <Input id="proj-repo" placeholder="https://github.com/org/repo" value={projectForm.repo_url}
+                  onChange={(e) => setProjectForm({ ...projectForm, repo_url: e.target.value })} />
+              </div>
+
+              {projectError && (
+                <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
+                  {projectError}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-4 border-t border-border/40 mt-4">
+                <Button type="button" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive text-sm"
+                  onClick={handleProjectDelete}>
+                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar Proyecto
+                </Button>
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" onClick={() => setShowProjectModal(false)}>Cancelar</Button>
+                  <Button type="submit" disabled={projectSaving || !projectForm.name.trim()}
+                    className="gap-2 gradient-violet text-white hover:opacity-90 border-0">
+                    {projectSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Guardar
+                  </Button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
