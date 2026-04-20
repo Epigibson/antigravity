@@ -169,14 +169,16 @@ export default function ProjectDetailPage() {
 
   const loadProject = useCallback(async () => {
     try {
-      const [p, a, skills] = await Promise.all([
+      const [p, skills] = await Promise.all([
         api.getProject(slug),
-        api.listAudit({ limit: 5 }),
         api.getSkillCatalog(),
       ]);
       setProject(p);
-      setAudit(a.filter((e) => e.project_name === p.name).slice(0, 5));
       setSkillCatalog(skills);
+
+      // Fetch audit specifically for this project
+      const a = await api.listAudit({ project_id: p.id, limit: 15 });
+      setAudit(a);
     } catch (err) {
       console.error("Error loading project:", err);
     } finally {
