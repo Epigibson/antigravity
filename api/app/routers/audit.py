@@ -72,17 +72,17 @@ async def create_audit(
         project_id = None
         if body.project_name:
             from sqlalchemy import or_
-            from app.models.organization import Organization
-            # Resolving project matching the slug or name owned by user
-            proj_q = await db.execute(
-                select(Project.id)
-                .join(Organization, Project.org_id == Organization.id)
-                .where(
-                    or_(Project.slug == body.project_name, Project.name == body.project_name),
-                    Organization.owner_id == user.id
-                ).limit(1)
-            )
-            project_id = proj_q.scalar_one_or_none()
+            from app.services.project_service import get_user_org_id
+            
+            org_id = await get_user_org_id(db, user.id)
+            if org_id:
+                proj_q = await db.execute(
+                    select(Project.id).where(
+                        or_(Project.slug == body.project_name, Project.name == body.project_name),
+                        Project.org_id == org_id
+                    ).limit(1)
+                )
+                project_id = proj_q.scalar_one_or_none()
 
         from app.models.audit import AuditAction
         import enum
