@@ -68,39 +68,53 @@ async def create_audit(
     db: AsyncSession = Depends(get_db),
 ):
     """Crear un log de auditoría (normalmente usado por el CLI vía X-API-Key)."""
-    project_id = None
-    if body.project_name:
-        from sqlalchemy import or_
-        # Resolving project matching the slug or name owned by user
-        proj_q = await db.execute(
-            select(Project.id).where(
-                or_(Project.slug == body.project_name, Project.name == body.project_name),
-                Project.user_id == user.id
+    try:
+        project_id = None
+        if body.project_name:
+            from sqlalchemy import or_
+            # Resolving project matching the slug or name owned by user
+            proj_q = await db.execute(
+                select(Project.id).where(
+                    or_(Project.slug == body.project_name, Project.name == body.project_name),
+                    Project.user_id == user.id
+                ).limit(1)
             )
+            project_id = proj_q.scalar_one_or_none()
+
+        from app.models.audit import AuditAction
+        import enum
+
+        safe_action = body.action
+        try:
+            safe_action = AuditAction(body.action)
+        except Exception:
+            pass # Fallback to string if enum lookup fails
+
+        entry = AuditLog(
+            user_id=user.id,
+            project_id=project_id,
+            action=safe_action,
+            environment=body.environment,
+            message=body.message,
+            success=body.success,
+            duration_ms=body.duration_ms,
         )
-        project_id = proj_q.scalar_one_or_none()
+        db.add(entry)
+        await db.commit()
+        await db.refresh(entry)
 
-    entry = AuditLog(
-        user_id=user.id,
-        project_id=project_id,
-        action=body.action,
-        environment=body.environment,
-        message=body.message,
-        success=body.success,
-        duration_ms=body.duration_ms,
-    )
-    db.add(entry)
-    await db.commit()
-    await db.refresh(entry)
-
-    return AuditEntryResponse(
-        id=entry.id,
-        action=entry.action,
-        project_name=body.project_name,
-        environment=entry.environment,
-        skill_name=None,
-        message=entry.message,
-        success=entry.success,
-        duration_ms=entry.duration_ms,
-        created_at=entry.created_at.isoformat() if entry.created_at else "",
-    )
+        return AuditEntryResponse(
+            id=entry.id,
+            action=entry.action,
+            project_name=body.project_name,
+            environment=entry.environment,
+            skill_name=None,
+            message=entry.message,
+            success=entry.success,
+            duration_ms=entry.duration_ms,
+            created_at=entry.created_at.isoformat() if entry.created_at else "",
+        )
+    except Exception as e:
+        from fastapi import HTTPException
+        import traceback
+        raise HTTPException(status_code=500, detail=f"Error inserting audit: {str(e)}\n{traceback.format_exc()}")
