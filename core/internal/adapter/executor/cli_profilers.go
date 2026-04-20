@@ -483,6 +483,112 @@ func (s *StripeProfiler) ListProfiles() ([]string, error) {
 	return []string{"(managed via env vars)"}, nil
 }
 // ============================================================================
+// Railway CLI Profiler
+// ============================================================================
+
+// RailwayProfiler manages Railway CLI profile switching.
+type RailwayProfiler struct{}
+
+func NewRailwayProfiler() *RailwayProfiler { return &RailwayProfiler{} }
+
+func (r *RailwayProfiler) ToolName() string { return "railway" }
+
+func (r *RailwayProfiler) IsInstalled() bool {
+	_, err := exec.LookPath("railway")
+	return err == nil
+}
+
+func (r *RailwayProfiler) CurrentProfile() (string, error) {
+	cmd := exec.Command("railway", "whoami")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "none", nil
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+func (r *RailwayProfiler) Switch(profile domain.CLIProfile) error {
+	token := ""
+	if profile.Extra != nil {
+		if t, ok := profile.Extra["token"]; ok && t != "" {
+			token = t
+		}
+	}
+	if token == "" {
+		token = os.Getenv("RAILWAY_TOKEN")
+	}
+
+	if token != "" {
+		os.Setenv("RAILWAY_TOKEN", token)
+	} else {
+		return fmt.Errorf("railway: no token found. Add a Railway Token in your dashboard profile credentials")
+	}
+
+	return nil
+}
+
+func (r *RailwayProfiler) ListProfiles() ([]string, error) {
+	return []string{"(managed via env vars)"}, nil
+}
+
+// ============================================================================
+// Flyctl Profiler (fly)
+// ============================================================================
+
+// FlyProfiler manages Flyctl profile switching.
+type FlyProfiler struct{}
+
+func NewFlyProfiler() *FlyProfiler { return &FlyProfiler{} }
+
+func (f *FlyProfiler) ToolName() string { return "fly" }
+
+func (f *FlyProfiler) IsInstalled() bool {
+	_, err := exec.LookPath("fly")
+	if err != nil {
+		_, err = exec.LookPath("flyctl")
+		return err == nil
+	}
+	return true
+}
+
+func (f *FlyProfiler) CurrentProfile() (string, error) {
+	cmdName := "fly"
+	if _, err := exec.LookPath("fly"); err != nil {
+		cmdName = "flyctl"
+	}
+	cmd := exec.Command(cmdName, "auth", "whoami")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "none", nil
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+func (f *FlyProfiler) Switch(profile domain.CLIProfile) error {
+	token := ""
+	if profile.Extra != nil {
+		if t, ok := profile.Extra["token"]; ok && t != "" {
+			token = t
+		}
+	}
+	if token == "" {
+		token = os.Getenv("FLY_API_TOKEN")
+	}
+
+	if token != "" {
+		os.Setenv("FLY_API_TOKEN", token)
+	} else {
+		return fmt.Errorf("fly: no token found. Add a Fly Token in your dashboard profile credentials")
+	}
+
+	return nil
+}
+
+func (f *FlyProfiler) ListProfiles() ([]string, error) {
+	return []string{"(managed via env vars)"}, nil
+}
+
+// ============================================================================
 // Registry — Factory for all profilers
 // ============================================================================
 
@@ -508,5 +614,7 @@ func AllProfilers() []interface {
 		NewVercelProfiler(),
 		NewMongoProfiler(),
 		NewStripeProfiler(),
+		NewRailwayProfiler(),
+		NewFlyProfiler(),
 	}
 }

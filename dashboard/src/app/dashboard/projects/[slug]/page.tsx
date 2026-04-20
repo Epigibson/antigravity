@@ -979,14 +979,10 @@ export default function ProjectDetailPage() {
                       if (!entry.key.trim()) continue;
                       if (entry.value) {
                         newVars[entry.key] = entry.value;
+                      } else if (!entry.isNew) {
+                        // Keep old value
+                        newVars[entry.key] = "••••";
                       }
-                      // If value is empty and not new, we keep the old value
-                      // by not including it (the API replaces all vars)
-                      // So for existing vars with empty value, we need to NOT send them
-                      // unless user explicitly wants to keep them
-                      // For simplicity: if value is empty AND not new, skip (keep old)
-                      // This means user must re-enter all values when changing any var
-                      // TODO: implement partial update
                     }
                     if (Object.keys(newVars).length === 0 && varsEntries.some(e => e.key.trim())) {
                       throw new Error("Ingresa al menos un valor para guardar las variables.");

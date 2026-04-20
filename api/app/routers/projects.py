@@ -17,6 +17,7 @@ from app.services.project_service import (
     update_project, delete_project, get_project_switch_count,
     get_project_last_switch,
 )
+from app.services.crypto_service import encrypt_dict, decrypt_dict, encrypt_value
 from app.services.plan_enforcement import check_cli_tools_limit
 from app.middleware.auth import get_current_user
 
@@ -41,7 +42,7 @@ def _env_to_schema(env: EnvironmentProfile) -> EnvironmentSchema:
         git_branch=env.git_branch,
         env_var_count=len(raw_vars),
         env_var_keys=list(raw_vars.keys()),
-        env_vars={k: _mask_value(v) for k, v in raw_vars.items()},
+        env_vars={k: "••••" for k in raw_vars.keys()},
         cli_profiles=profiles,
         hooks=hooks,
     )
@@ -59,7 +60,7 @@ def _env_to_schema_unmasked(env: EnvironmentProfile) -> EnvironmentSchema:
         git_branch=env.git_branch,
         env_var_count=len(raw_vars),
         env_var_keys=list(raw_vars.keys()),
-        env_vars=raw_vars,  # UNMASKED values for CLI
+        env_vars=decrypt_dict(raw_vars),  # UNMASKED and DECRYPTED values for CLI
         cli_profiles=profiles,
         hooks=hooks,
     )
@@ -218,7 +219,7 @@ async def create_env(slug: str, body: EnvironmentCreate, user: User = Depends(ge
         name=body.name,
         environment=body.environment,
         git_branch=body.git_branch,
-        env_vars=body.env_vars,
+        env_vars=encrypt_dict(body.env_vars),
         cli_profiles=[p.model_dump() for p in body.cli_profiles],
         hooks=[h.model_dump() for h in body.hooks],
     )
@@ -242,7 +243,15 @@ async def update_env(slug: str, env_name: str, body: EnvironmentUpdate,
     if body.git_branch is not None:
         env.git_branch = body.git_branch
     if body.env_vars is not None:
-        env.env_vars = body.env_vars
+        current_vars = env.env_vars or {}
+        new_vars = {}
+        for k, v in body.env_vars.items():
+            if v == "••••":
+                if k in current_vars:
+                    new_vars[k] = current_vars[k]
+            else:
+                new_vars[k] = encrypt_value(v)
+        env.env_vars = new_vars
     if body.cli_profiles is not None:
         try:
             await check_cli_tools_limit(db, project.org_id, project.id, len(body.cli_profiles))

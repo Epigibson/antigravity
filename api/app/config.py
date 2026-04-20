@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     supabase_anon_key: Optional[str] = None
     supabase_service_role_key: Optional[str] = None
 
-    # JWT
+    # JWT & Crypto
     secret_key: str = "dev-secret-key-change-in-production"
+    encryption_key: str = "gZz3p44P624ZzYGBa8qL4Vqof9w4d7S0AILv6Ew8zZ0=" # 32-byte base64 default
     access_token_expire_minutes: int = 1440  # 24 hours
     algorithm: str = "HS256"
 
