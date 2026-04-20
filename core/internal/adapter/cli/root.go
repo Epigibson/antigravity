@@ -48,6 +48,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newInitCmd())
 	rootCmd.AddCommand(newListCmd())
 	rootCmd.AddCommand(newProfilesCmd())
+	rootCmd.AddCommand(newCurrentCmd())
 	rootCmd.AddCommand(newVersionCmd())
 
 	// Cloud commands
