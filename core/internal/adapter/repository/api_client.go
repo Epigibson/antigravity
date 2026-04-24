@@ -166,6 +166,11 @@ func (c *APIClient) get(path string, result interface{}) error {
 	return c.doRequest(req, result)
 }
 
+// PostJSON is a public wrapper around the internal post method.
+func (c *APIClient) PostJSON(path string, body interface{}, result interface{}) error {
+	return c.post(path, body, result)
+}
+
 func (c *APIClient) post(path string, body interface{}, result interface{}) error {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {

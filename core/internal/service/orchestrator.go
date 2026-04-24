@@ -63,10 +63,8 @@ func NewOrchestrator(cfg OrchestratorConfig) *Orchestrator {
 }
 
 // Switch performs a full context switch to the specified project and environment.
-// This is the main entry point of Nexus's core functionality.
+// This is the main entry point for Local Mode (reads from YAML file).
 func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error) {
-	startTime := time.Now()
-
 	// 1. Load project configuration
 	project, err := o.configReader.ReadProject(projectPath)
 	if err != nil {
@@ -77,23 +75,32 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 		return nil, fmt.Errorf("invalid project config: %w", err)
 	}
 
-	// 2. Resolve the target environment
+	return o.SwitchWithProject(project, envName)
+}
+
+// SwitchWithProject performs a full context switch with a pre-loaded project.
+// This is used by Cloud Mode (project loaded from API) and Local Mode (via Switch).
+// Having a single entry point ensures consistent behavior across both modes.
+func (o *Orchestrator) SwitchWithProject(project *domain.Project, envName string) (*SwitchResult, error) {
+	startTime := time.Now()
+
+	// 1. Resolve the target environment
 	env, err := project.GetEnvironment(envName)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. Log the switch initiation
+	// 2. Log the switch initiation
 	o.logAudit(domain.AuditActionSwitch, project.Name, envName, "",
 		fmt.Sprintf("Starting context switch to %s/%s", project.Name, envName), true)
 
-	// 4. Run PRE-switch hooks
+	// 3. Run PRE-switch hooks
 	preResults := o.runHooks(project, env, envName, "pre")
 
-	// 5. Get enabled skills sorted by priority
+	// 4. Get enabled skills sorted by priority
 	skills := project.GetEnabledSkills()
 
-	// 6. Execute each skill
+	// 5. Execute each skill
 	results := make([]domain.SkillResult, 0, len(skills)+len(preResults))
 	results = append(results, preResults...)
 	var shellLines []string
@@ -127,15 +134,15 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 			skill.Name, result.Message, result.IsSuccess())
 	}
 
-	// 7. Handle CLI profile switching
+	// 6. Handle CLI profile switching
 	cliResults := o.switchCLIProfiles(project, env, envName)
 	results = append(results, cliResults...)
 
-	// 8. Run POST-switch hooks
+	// 7. Run POST-switch hooks
 	postResults := o.runHooks(project, env, envName, "post")
 	results = append(results, postResults...)
 
-	// 9. Aggregate results
+	// 8. Aggregate results
 	allSuccess := true
 	for _, r := range results {
 		if r.Status == domain.SkillStatusFailed {
@@ -146,7 +153,7 @@ func (o *Orchestrator) Switch(projectPath, envName string) (*SwitchResult, error
 
 	totalDuration := time.Since(startTime)
 
-	// 10. Final audit log
+	// 9. Final audit log
 	o.logAudit(domain.AuditActionSwitch, project.Name, envName, "",
 		fmt.Sprintf("Context switch completed in %dms (success=%v)", totalDuration.Milliseconds(), allSuccess),
 		allSuccess)
