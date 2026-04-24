@@ -1,7 +1,7 @@
 """Seed script — populate database with demo data matching the dashboard mock."""
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from app.database import engine, async_session, Base
 from app.models.user import User
