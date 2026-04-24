@@ -1,8 +1,8 @@
 """Dashboard stats service — aggregation queries."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
-from sqlalchemy import select, func, case, and_
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.project import Project
