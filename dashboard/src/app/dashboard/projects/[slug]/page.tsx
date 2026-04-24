@@ -95,6 +95,20 @@ const TOOL_CATALOG = [
     id: "fly", label: "Fly.io", icon: "✈️", fields: ["account", "org"],
     credentials: [{ key: "token", label: "Fly Token", placeholder: "fo1_xxxx" }]
   },
+  {
+    id: "expo", label: "Expo", icon: "⚛️", fields: ["account"],
+    credentials: [
+      { key: "token", label: "Expo Token (opcional)", placeholder: "xxxxxx" },
+      { key: "password", label: "Password (para login interactivo)", placeholder: "tu-password" }
+    ]
+  },
+  {
+    id: "eas", label: "EAS", icon: "🛠️", fields: ["account"],
+    credentials: [
+      { key: "token", label: "Expo Token (opcional)", placeholder: "xxxxxx" },
+      { key: "password", label: "Password (para login interactivo)", placeholder: "tu-password" }
+    ]
+  },
 ];
 
 const toolMeta: Record<string, { label: string; icon: string }> = {};
