@@ -29,26 +29,28 @@ type APIClient struct {
 
 // ProjectDTO represents a project from the API.
 type ProjectDTO struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name"`
-	Slug        string           `json:"slug"`
-	Description string           `json:"description"`
-	RepoURL     string           `json:"repo_url"`
-	IsActive    bool             `json:"is_active"`
+	ID           string           `json:"id"`
+	Name         string           `json:"name"`
+	Slug         string           `json:"slug"`
+	Description  string           `json:"description"`
+	RepoURL      string           `json:"repo_url"`
+	IsActive     bool             `json:"is_active"`
 	Environments []EnvironmentDTO `json:"environments"`
-	SwitchCount int              `json:"switch_count"`
-	CreatedAt   string           `json:"created_at"`
+	Skills       []SkillDTO       `json:"skills"`
+	SwitchCount  int              `json:"switch_count"`
+	CreatedAt    string           `json:"created_at"`
 }
 
 // EnvironmentDTO represents an environment from the API.
 type EnvironmentDTO struct {
-	ID          string          `json:"id"`
-	Name        string          `json:"name"`
-	Environment string          `json:"environment"`
-	GitBranch   string          `json:"git_branch"`
-	EnvVarCount int             `json:"env_var_count"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Environment string            `json:"environment"`
+	GitBranch   string            `json:"git_branch"`
+	EnvVarCount int               `json:"env_var_count"`
 	EnvVars     map[string]string `json:"env_vars"`
-	CLIProfiles []CLIProfileDTO `json:"cli_profiles"`
+	CLIProfiles []CLIProfileDTO   `json:"cli_profiles"`
+	Hooks       []HookDTO         `json:"hooks"`
 }
 
 // CLIProfileDTO represents a CLI profile from the API.
@@ -59,6 +61,26 @@ type CLIProfileDTO struct {
 	Org     string            `json:"org,omitempty"`
 	Status  string            `json:"status"`
 	Extra   map[string]string `json:"extra,omitempty"`
+}
+
+// SkillDTO represents a skill configuration from the API.
+type SkillDTO struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	Icon        string `json:"icon"`
+	IsEnabled   bool   `json:"is_enabled"`
+	Priority    int    `json:"priority"`
+	IsPremium   bool   `json:"is_premium"`
+}
+
+// HookDTO represents a script hook from the API.
+type HookDTO struct {
+	Name    string `json:"name"`
+	Command string `json:"command"`
+	Phase   string `json:"phase"`
+	Timeout int    `json:"timeout"`
 }
 
 // UserDTO represents the current user.
