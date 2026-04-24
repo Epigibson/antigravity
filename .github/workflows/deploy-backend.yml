@@ -3,7 +3,7 @@ name: Deploy Backend to AWS Lambda
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'api/**'
 
