@@ -43,6 +43,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Set up QEMU (for ARM64 cross-compilation)
+        uses: docker/setup-qemu-action@v3
+
       - name: Deploy to AWS
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
