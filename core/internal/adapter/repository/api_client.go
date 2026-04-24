@@ -171,6 +171,20 @@ func (c *APIClient) PostJSON(path string, body interface{}, result interface{}) 
 	return c.post(path, body, result)
 }
 
+// PutJSON sends a PUT request with JSON body.
+func (c *APIClient) PutJSON(path string, body interface{}, result interface{}) error {
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("PUT", c.baseURL+"/api/v1"+path, bytes.NewReader(jsonBody))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return c.doRequest(req, result)
+}
+
 func (c *APIClient) post(path string, body interface{}, result interface{}) error {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
