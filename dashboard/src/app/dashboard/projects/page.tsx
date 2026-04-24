@@ -9,9 +9,12 @@ import {
   Clock,
   Plus,
   Loader2,
-  X,
   FolderPlus,
+  X,
 } from "lucide-react";
+import { InnovativeLoader } from "@/components/ui/innovative-loader";
+import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +48,6 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState("");
 
   // Form fields
   const [name, setName] = useState("");
@@ -67,7 +69,6 @@ export default function ProjectsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setCreating(true);
     try {
       await api.createProject({
@@ -82,20 +83,17 @@ export default function ProjectsPage() {
       setSlugEdited(false);
       setDescription("");
       setRepoUrl("");
+      toast.success("Proyecto creado exitosamente");
       loadProjects();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al crear proyecto");
+      toast.error(err instanceof Error ? err.message : "Error al crear proyecto");
     } finally {
       setCreating(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <InnovativeLoader message="Cargando Proyectos..." subMessage="Obteniendo datos de tus entornos" />;
   }
 
   return (
@@ -119,24 +117,20 @@ export default function ProjectsPage() {
 
       {/* Empty State */}
       {projects.length === 0 && (
-        <Card className="border-dashed border-2 border-border/50">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4">
-              <FolderPlus className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1">Sin proyectos aún</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mb-4">
-              Crea tu primer proyecto para empezar a gestionar tus entornos de desarrollo.
-            </p>
+        <EmptyState
+          icon={<FolderPlus className="h-8 w-8" />}
+          title="Sin proyectos aún"
+          description="Crea tu primer proyecto para empezar a gestionar tus entornos de desarrollo."
+          action={
             <Button
-              className="gap-2 gradient-violet text-white hover:opacity-90 border-0"
+              className="gap-2 gradient-violet text-white hover:opacity-90 border-0 shadow-lg shadow-violet-900/20"
               onClick={() => setShowModal(true)}
             >
               <Plus className="h-4 w-4" />
               Crear Primer Proyecto
             </Button>
-          </CardContent>
-        </Card>
+          }
+        />
       )}
 
       {/* Project Cards Grid */}
@@ -210,9 +204,9 @@ export default function ProjectsPage() {
                       <span>
                         {project.last_switch
                           ? new Date(project.last_switch).toLocaleDateString(
-                              "es-MX",
-                              { month: "short", day: "numeric" }
-                            )
+                            "es-MX",
+                            { month: "short", day: "numeric" }
+                          )
                           : "—"}
                       </span>
                     </div>
@@ -327,11 +321,7 @@ export default function ProjectsPage() {
                 />
               </div>
 
-              {error && (
-                <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
+
 
               <div className="flex justify-end gap-3 pt-2">
                 <Button

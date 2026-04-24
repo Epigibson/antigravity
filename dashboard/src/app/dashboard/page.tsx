@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ActivityChart } from "@/components/dashboard/activity-chart";
+import { InnovativeLoader } from "@/components/ui/innovative-loader";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type {
@@ -71,11 +72,7 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <InnovativeLoader message="Preparando Dashboard..." subMessage="Cargando métricas y actividad reciente" />;
   }
 
   const plan = planLimits?.plan || "free";
@@ -151,7 +148,7 @@ export default function DashboardPage() {
         {statCards.map((stat) => (
           <Card
             key={stat.title}
-            className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/5"
+            className="group relative overflow-hidden glass bg-card/40 border-border/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20"
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -180,7 +177,7 @@ export default function DashboardPage() {
 
       {/* Plan usage bar — only for limited plans */}
       {!isUnlimited && (
-        <Card>
+        <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Uso del Plan</span>
@@ -219,7 +216,7 @@ export default function DashboardPage() {
 
       {/* Activity Chart + Recent Switches */}
       <div className="grid gap-6 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">Actividad Semanal</CardTitle>
           </CardHeader>
@@ -228,7 +225,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-3 glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -279,7 +276,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Projects Quick Access */}
-      <Card>
+      <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
         <CardHeader>
           <CardTitle className="text-base">Acceso Rápido a Proyectos</CardTitle>
         </CardHeader>
@@ -289,7 +286,7 @@ export default function DashboardPage() {
               <a
                 key={project.id}
                 href={`/dashboard/projects/${project.slug}`}
-                className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-all duration-150 hover:border-primary/30 hover:bg-primary/5"
+                className="group flex items-center gap-3 rounded-xl border border-border/50 bg-card/40 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-primary/5 hover:shadow-xl hover:shadow-violet-900/10"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-sm">
                   {project.name.charAt(0)}

@@ -659,78 +659,6 @@ func (e *ExpoProfiler) ListProfiles() ([]string, error) {
 }
 
 // ============================================================================
-// EAS Profiler
-// ============================================================================
-
-// EasProfiler manages EAS CLI profile switching.
-type EasProfiler struct{}
-
-func NewEasProfiler() *EasProfiler { return &EasProfiler{} }
-
-func (e *EasProfiler) ToolName() string { return "eas" }
-
-func (e *EasProfiler) IsInstalled() bool {
-	_, err := exec.LookPath("eas")
-	return err == nil
-}
-
-func (e *EasProfiler) CurrentProfile() (string, error) {
-	cmd := exec.Command("eas", "whoami")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return "none", nil
-	}
-	return strings.TrimSpace(string(output)), nil
-}
-
-func (e *EasProfiler) Switch(profile domain.CLIProfile) error {
-	// EAS CLI uses the same session state as Expo CLI
-	// Step 1: Always logout first
-	logoutCmd := exec.Command("eas", "logout")
-	_ = logoutCmd.Run()
-
-	// Step 2: Since eas login is interactive, we leverage expo login if password is provided
-	password := ""
-	if profile.Extra != nil {
-		if p, ok := profile.Extra["password"]; ok && p != "" {
-			password = p
-		}
-	}
-
-	if password != "" && profile.Account != "" {
-		// Log in using Expo CLI (EAS will inherit this session)
-		loginCmd := exec.Command("expo", "login", "-u", profile.Account, "-p", password)
-		output, err := loginCmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("eas (via expo) login failed: %s", strings.TrimSpace(string(output)))
-		}
-		return nil
-	}
-
-	// Step 3: Fallback to token-based auth
-	token := ""
-	if profile.Extra != nil {
-		if t, ok := profile.Extra["token"]; ok && t != "" {
-			token = t
-		}
-	}
-	if token == "" {
-		token = os.Getenv("EXPO_TOKEN")
-	}
-
-	if token != "" {
-		os.Setenv("EXPO_TOKEN", token)
-		return nil
-	}
-
-	return fmt.Errorf("eas: no token or password found. Add password or token in your extra fields")
-}
-
-func (e *EasProfiler) ListProfiles() ([]string, error) {
-	return []string{"(managed via env vars)"}, nil
-}
-
-// ============================================================================
 // Registry — Factory for all profilers
 // ============================================================================
 
@@ -759,6 +687,5 @@ func AllProfilers() []interface {
 		NewRailwayProfiler(),
 		NewFlyProfiler(),
 		NewExpoProfiler(),
-		NewEasProfiler(),
 	}
 }

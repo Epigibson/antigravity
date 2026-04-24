@@ -39,71 +39,92 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api";
 import type { ProjectResponse, AuditEntry, SkillResponse } from "@/lib/api";
+import { InnovativeLoader } from "@/components/ui/innovative-loader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* ─── Tool definitions ─── */
 const TOOL_CATALOG = [
   {
-    id: "git", label: "Git", icon: "📦", fields: ["account"],
+    id: "git", label: "Git", icon: <img src="/git/Git-Icon-1788C.png" className="w-6 h-6 object-contain" alt="Git" />, fields: ["account"],
     credentials: [
       { key: "user_name", label: "Nombre (user.name)", placeholder: "Ricardo Minor" },
       { key: "user_email", label: "Email (user.email)", placeholder: "ricardo@example.com", help: "Se configura automáticamente con nexus switch vía git config" },
     ]
   },
   {
-    id: "gh", label: "GitHub", icon: "🐙", fields: ["account", "org"],
+    id: "gh", label: "GitHub", icon: (
+      <div className="relative w-6 h-6">
+        <img src="/github/GitHub_Invertocat_Black.png" className="absolute inset-0 w-full h-full object-contain dark:hidden" alt="GitHub" />
+        <img src="/github/GitHub_Invertocat_White.png" className="absolute inset-0 w-full h-full object-contain hidden dark:block" alt="GitHub" />
+      </div>
+    ), fields: ["account", "org"],
     credentials: [{ key: "token", label: "Personal Access Token (GH_TOKEN)", placeholder: "ghp_xxxxxxxxxxxx", help: "Genera uno en github.com/settings/tokens con permisos: repo, read:org" }]
   },
   {
-    id: "aws", label: "AWS", icon: "☁️", fields: ["account", "region"],
+    id: "aws", label: "AWS", icon: <img src="/aws/aws-color.png" className="w-8 h-6 object-contain" alt="AWS" />, fields: ["account", "region"],
     credentials: [
       { key: "access_key_id", label: "Access Key ID", placeholder: "AKIAIOSFODNN7EXAMPLE" },
       { key: "secret_access_key", label: "Secret Access Key", placeholder: "wJalrXUtnFEMI/K7MDENG/bPxR...", help: "Se guarda encriptado. Nunca se muestra en el dashboard." },
     ]
   },
   {
-    id: "supabase", label: "Supabase", icon: "⚡", fields: ["account", "region"],
+    id: "supabase", label: "Supabase", icon: <img src="/supabase/supabase-logo-icon.svg" className="w-6 h-6 object-contain" alt="Supabase" />, fields: ["account", "region"],
     credentials: [
       { key: "token", label: "Access Token", placeholder: "sbp_xxxxxxxxxxxx", help: "Genera uno en supabase.com/dashboard/account/tokens" },
       { key: "db_password", label: "DB Password (opcional)", placeholder: "tu-password-de-bd" },
     ]
   },
   {
-    id: "vercel", label: "Vercel", icon: "▲", fields: ["account", "org"],
+    id: "vercel", label: "Vercel", icon: (
+      <div className="relative w-6 h-6">
+        <img src="/vercel/vercel-icon-dark.svg" className="absolute inset-0 w-full h-full object-contain dark:hidden" alt="Vercel" />
+        <img src="/vercel/vercel-icon-light.svg" className="absolute inset-0 w-full h-full object-contain hidden dark:block" alt="Vercel" />
+      </div>
+    ), fields: ["account", "org"],
     credentials: [{ key: "token", label: "Vercel Token", placeholder: "xxxxxxxxxxxxxxxx", help: "Genera uno en vercel.com/account/tokens" }]
   },
   {
-    id: "stripe", label: "Stripe", icon: "💳", fields: ["account"],
+    id: "stripe", label: "Stripe", icon: <img src="/stripe/Stripe wordmark - Blurple.svg" className="w-14 h-6 object-contain" alt="Stripe" />, fields: ["account"],
     credentials: [
       { key: "secret_key", label: "Secret Key (sk_test / sk_live)", placeholder: "sk_test_51TEz...", help: "Disponible en dashboard.stripe.com/apikeys" },
       { key: "publishable_key", label: "Publishable Key", placeholder: "pk_test_51TEz..." },
     ]
   },
   {
-    id: "railway", label: "Railway", icon: "🚂", fields: ["account"],
+    id: "railway", label: "Railway", icon: <img src="/railway/logotype-light.png" className="w-16 h-5 object-contain invert dark:invert-0" alt="Railway" />, fields: ["account"],
     credentials: [{ key: "token", label: "Railway Token", placeholder: "xxxxxxxx" }]
   },
-  { id: "docker", label: "Docker", icon: "🐳", fields: ["account"], credentials: [] },
+  { id: "docker", label: "Docker", icon: <img src="/docker/docker-mark-ocean-blue.png" className="w-7 h-6 object-contain" alt="Docker" />, fields: ["account"], credentials: [] },
   { id: "gcloud", label: "Google Cloud", icon: "🌐", fields: ["account", "region"], credentials: [] },
-  { id: "az", label: "Azure", icon: "🔷", fields: ["account", "region"], credentials: [] },
-  { id: "kubectl", label: "Kubernetes", icon: "☸️", fields: ["account", "region"], credentials: [] },
+  { id: "az", label: "Azure", icon: <img src="/azure/icons8-azur-96.png" className="w-6 h-6 object-contain" alt="Azure" />, fields: ["account", "region"], credentials: [] },
+  { id: "kubectl", label: "Kubernetes", icon: <img src="/kubernetes/Kubernetes-Logo.png" className="w-6 h-6 object-contain" alt="Kubernetes" />, fields: ["account", "region"], credentials: [] },
   {
-    id: "mongosh", label: "MongoDB", icon: "🍃", fields: ["account", "region"],
+    id: "mongosh", label: "MongoDB", icon: (
+      <div className="relative w-6 h-6">
+        <img src="/mongodb/MongoDB_Logomark_ForestGreen.svg" className="absolute inset-0 w-full h-full object-contain dark:hidden" alt="MongoDB" />
+        <img src="/mongodb/MongoDB_Logomark_SpringGreen.svg" className="absolute inset-0 w-full h-full object-contain hidden dark:block" alt="MongoDB" />
+      </div>
+    ), fields: ["account", "region"],
     credentials: [{ key: "uri", label: "Connection URI", placeholder: "mongodb+srv://user:pass@cluster.mongodb.net/db" }]
   },
-  { id: "firebase", label: "Firebase", icon: "🔥", fields: ["account"], credentials: [] },
+  { id: "firebase", label: "Firebase", icon: <img src="/firebase/Logomark_Full Color.png" className="w-5 h-6 object-contain" alt="Firebase" />, fields: ["account"], credentials: [] },
   {
-    id: "fly", label: "Fly.io", icon: "✈️", fields: ["account", "org"],
+    id: "fly", label: "Fly.io", icon: <img src="/fly.io/logo-landscape-light.svg" className="w-14 h-6 object-contain invert dark:invert-0" alt="Fly.io" />, fields: ["account", "org"],
     credentials: [{ key: "token", label: "Fly Token", placeholder: "fo1_xxxx" }]
   },
   {
-    id: "expo", label: "Expo", icon: "⚛️", fields: ["account"],
-    credentials: [
-      { key: "token", label: "Expo Token (opcional)", placeholder: "xxxxxx" },
-      { key: "password", label: "Password (para login interactivo)", placeholder: "tu-password" }
-    ]
-  },
-  {
-    id: "eas", label: "EAS", icon: "🛠️", fields: ["account"],
+    id: "expo", label: "Expo", icon: (
+      <div className="relative w-14 h-5">
+        <img src="/expo/logo-wordmark.png" className="absolute inset-0 w-full h-full object-contain dark:hidden" alt="Expo" />
+        <img src="/expo/logo-wordmark-light.png" className="absolute inset-0 w-full h-full object-contain hidden dark:block" alt="Expo" />
+      </div>
+    ), fields: ["account"],
     credentials: [
       { key: "token", label: "Expo Token (opcional)", placeholder: "xxxxxx" },
       { key: "password", label: "Password (para login interactivo)", placeholder: "tu-password" }
@@ -111,7 +132,7 @@ const TOOL_CATALOG = [
   },
 ];
 
-const toolMeta: Record<string, { label: string; icon: string }> = {};
+const toolMeta: Record<string, { label: string; icon: React.ReactNode }> = {};
 TOOL_CATALOG.forEach((t) => { toolMeta[t.id] = { label: t.label, icon: t.icon }; });
 
 const envColors: Record<string, string> = {
@@ -371,7 +392,7 @@ export default function ProjectDetailPage() {
     if (!project) return;
     const confirm = window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el proyecto "${project.name}" y todos sus entornos? Esta acción es irreversible.`);
     if (!confirm) return;
-    
+
     try {
       await api.deleteProject(slug);
       router.push("/dashboard/projects");
@@ -381,11 +402,7 @@ export default function ProjectDetailPage() {
   };
 
   if (loading || !project) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <InnovativeLoader message="Sincronizando Entorno..." subMessage="Preparando herramientas y variables" />;
   }
 
   // Merge skills catalog with project skills
@@ -443,7 +460,7 @@ export default function ProjectDetailPage() {
 
           {/* Empty state */}
           {project.environments.length === 0 && (
-            <Card className="border-dashed border-2 border-border/50">
+            <Card className="glass bg-card/40 border-dashed border-2 border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4">
                   <Server className="h-8 w-8 text-primary" />
@@ -466,7 +483,7 @@ export default function ProjectDetailPage() {
 
           {/* Environment cards */}
           {project.environments.map((env) => (
-            <Card key={env.name} className="overflow-hidden">
+            <Card key={env.name} className="overflow-hidden glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -633,7 +650,7 @@ export default function ProjectDetailPage() {
           </div>
 
           {mergedSkills.length === 0 ? (
-            <Card className="border-dashed border-2 border-border/50">
+            <Card className="glass bg-card/40 border-dashed border-2 border-border/50">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Zap className="h-8 w-8 text-primary mb-3" />
                 <p className="text-sm text-muted-foreground">No hay skills en el catálogo.</p>
@@ -643,7 +660,7 @@ export default function ProjectDetailPage() {
             <div className="grid gap-4 md:grid-cols-2">
               {mergedSkills.map((skill) => (
                 <Card key={skill.id}
-                  className={`transition-all duration-200 ${skill.is_enabled ? "border-primary/20 shadow-sm shadow-primary/5" : "opacity-70"}`}>
+                  className={`glass bg-card/40 border-border/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-900/10 ${skill.is_enabled ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20" : "opacity-70 hover:opacity-100"}`}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -678,7 +695,7 @@ export default function ProjectDetailPage() {
 
         {/* ═══ Activity Tab ═══ */}
         <TabsContent value="activity" className="space-y-4">
-          <Card>
+          <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
             <CardHeader><CardTitle className="text-base">Actividad Reciente</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {audit.length === 0 ? (
@@ -710,8 +727,8 @@ export default function ProjectDetailPage() {
       {/* ═══ Env Create/Edit Modal ═══ */}
       {showEnvModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEnvModal(false)} />
-          <div className="relative w-full max-w-lg mx-4 rounded-xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowEnvModal(false)} />
+          <div className="relative w-full max-w-lg mx-4 rounded-2xl border border-border/50 glass bg-card/70 p-6 shadow-[0_0_50px_-12px_rgba(139,92,246,0.3)] animate-in fade-in zoom-in-95 duration-300">
             <button onClick={() => setShowEnvModal(false)}
               className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <X className="h-4 w-4" />
@@ -751,12 +768,16 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="env-type">Tipo</Label>
-                    <select id="env-type" value={envType} onChange={(e) => setEnvType(e.target.value)}
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                      <option value="development">Development</option>
-                      <option value="staging">Staging</option>
-                      <option value="production">Production</option>
-                    </select>
+                    <Select value={envType} onValueChange={(v) => v && setEnvType(v)}>
+                      <SelectTrigger id="env-type" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        <SelectValue placeholder="Tipo de entorno" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="development">Development</SelectItem>
+                        <SelectItem value="staging">Staging</SelectItem>
+                        <SelectItem value="production">Production</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}
@@ -787,8 +808,8 @@ export default function ProjectDetailPage() {
       {/* ═══ Profile Add/Edit Modal ═══ */}
       {showProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowProfileModal(false)} />
-          <div className="relative w-full max-w-lg mx-4 rounded-xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowProfileModal(false)} />
+          <div className="relative w-full max-w-lg mx-4 rounded-2xl border border-border/50 glass bg-card/70 p-6 shadow-[0_0_50px_-12px_rgba(139,92,246,0.3)] animate-in fade-in zoom-in-95 duration-300">
             <button onClick={() => setShowProfileModal(false)}
               className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <X className="h-4 w-4" />
@@ -812,16 +833,18 @@ export default function ProjectDetailPage() {
             {profileEditIndex === null && (
               <div className="mb-4">
                 <Label className="mb-2 block">Selecciona herramienta *</Label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {TOOL_CATALOG.map((tool) => (
                     <button key={tool.id} type="button"
                       onClick={() => setProfileTool(tool.id)}
-                      className={`rounded-lg border p-2 text-center transition-all ${profileTool === tool.id
-                          ? "border-primary bg-primary/10 ring-1 ring-primary/30 scale-[1.02]"
-                          : "border-border hover:bg-muted"
+                      className={`relative flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all duration-200 ${profileTool === tool.id
+                        ? "border-primary bg-primary/10 ring-1 ring-primary/30 shadow-md scale-[1.02]"
+                        : "border-border/60 bg-card/40 hover:bg-muted/80 hover:border-border"
                         }`}>
-                      <div className="text-lg mb-0.5">{tool.icon}</div>
-                      <div className="text-[10px] font-medium leading-tight">{tool.label}</div>
+                      <div className="flex h-7 w-full items-center justify-center">
+                        {tool.icon}
+                      </div>
+                      <div className="text-[11px] font-medium tracking-tight text-foreground/80">{tool.label}</div>
                     </button>
                   ))}
                 </div>
@@ -939,8 +962,8 @@ export default function ProjectDetailPage() {
       {/* ═══ Env Vars Modal ═══ */}
       {showVarsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVarsModal(false)} />
-          <div className="relative w-full max-w-2xl mx-4 rounded-xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowVarsModal(false)} />
+          <div className="relative w-full max-w-2xl mx-4 rounded-2xl border border-border/50 glass bg-card/70 p-6 shadow-[0_0_50px_-12px_rgba(139,92,246,0.3)] animate-in fade-in zoom-in-95 duration-300 max-h-[80vh] overflow-y-auto">
             <button onClick={() => setShowVarsModal(false)}
               className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <X className="h-4 w-4" />

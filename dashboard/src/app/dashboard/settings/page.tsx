@@ -133,7 +133,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ─── Profile Section ─── */}
-      <Card>
+      <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <User className="h-4 w-4" />
@@ -193,7 +193,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* ─── Theme Section ─── */}
-      <Card>
+      <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Moon className="h-4 w-4" />
@@ -224,7 +224,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* ─── API Keys Section ─── */}
-      <Card>
+      <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Key className="h-4 w-4" />

@@ -13,6 +13,16 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
+import { InnovativeLoader } from "@/components/ui/innovative-loader";
+import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   "git-state": { label: "Git", color: "text-orange-400 bg-orange-400/10 border-orange-400/20" },
@@ -82,7 +92,7 @@ export default function SkillsPage() {
         setProjectSkills((prev) => prev.map((s) => (s.id === skill.id ? { ...s, is_enabled: false } : s)));
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al cambiar skill");
+      toast.error(err instanceof Error ? err.message : "Error al cambiar skill");
     } finally {
       setToggling(null);
     }
@@ -102,11 +112,7 @@ export default function SkillsPage() {
   const premiumSkills = filteredCatalog.filter((s) => s.is_premium);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <InnovativeLoader message="Cargando catálogo..." subMessage="Obteniendo skills y automatizaciones" />;
   }
 
   return (
@@ -130,19 +136,20 @@ export default function SkillsPage() {
       </div>
 
       {/* Project selector + filters */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-4 items-center rounded-2xl border border-border/50 glass bg-card/40 p-4 shadow-xl shadow-violet-900/5">
         {/* Project selector */}
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-          <select
-            value={selectedProject || ""}
-            onChange={(e) => onProjectChange(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
-          >
-            {projects.map((p) => (
-              <option key={p.slug} value={p.slug}>{p.name}</option>
-            ))}
-          </select>
+          <Select value={selectedProject || ""} onValueChange={(v) => v && onProjectChange(v)}>
+            <SelectTrigger className="w-[220px] rounded-lg border-border/50 bg-background/50 backdrop-blur-sm focus:ring-violet-500/30 transition-all hover:bg-background/80">
+              <SelectValue placeholder="Selecciona un proyecto" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((p) => (
+                <SelectItem key={p.slug} value={p.slug}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Category filter */}
@@ -153,10 +160,10 @@ export default function SkillsPage() {
               <button
                 key={cat}
                 onClick={() => setFilterCategory(cat)}
-                className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-all duration-300 ${
                   filterCategory === cat
-                    ? "border-primary bg-primary/10 text-primary"
-                    : `${config.color} hover:bg-muted/80`
+                    ? "border-violet-500/50 bg-violet-500/20 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.3)] font-medium"
+                    : `${config.color} hover:bg-muted/80 opacity-80 hover:opacity-100 hover:-translate-y-0.5 hover:shadow-lg`
                 }`}
               >
                 {cat === "all" ? "Todos" : config.label}
@@ -172,7 +179,7 @@ export default function SkillsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar skills..."
-            className="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+            className="w-full rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 outline-none transition-all placeholder:text-muted-foreground/50 hover:bg-background/80"
           />
         </div>
       </div>
@@ -180,8 +187,10 @@ export default function SkillsPage() {
       {/* Free skills */}
       {freeSkills.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Zap className="h-4 w-4" />
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-500/10 text-violet-400 border border-violet-500/20">
+              <Zap className="h-3.5 w-3.5" />
+            </div>
             Skills Incluidos
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -202,8 +211,10 @@ export default function SkillsPage() {
       {/* Premium skills */}
       {premiumSkills.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Crown className="h-4 w-4 text-amber-400" />
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+              <Crown className="h-3.5 w-3.5" />
+            </div>
             Skills Premium
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -223,10 +234,11 @@ export default function SkillsPage() {
       )}
 
       {filteredCatalog.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>No se encontraron skills</p>
-        </div>
+        <EmptyState
+          icon={<Search className="h-8 w-8" />}
+          title="No se encontraron skills"
+          description="Intenta ajustando los filtros de búsqueda o categoría."
+        />
       )}
     </div>
   );
@@ -253,12 +265,12 @@ function SkillCard({
 
   return (
     <div
-      className={`group rounded-xl border p-4 transition-all duration-200 ${
+      className={`group relative rounded-xl border p-4 transition-all duration-300 hover:-translate-y-1 glass ${
         enabled
-          ? "border-primary/30 bg-primary/[0.03] shadow-sm shadow-primary/5"
+          ? "border-primary/40 bg-primary/10 shadow-lg shadow-primary/10 ring-1 ring-primary/20"
           : locked
-          ? "border-border/50 bg-card/50 opacity-70"
-          : "border-border bg-card hover:border-primary/20 hover:bg-primary/[0.02]"
+          ? "border-border/50 bg-card/20 opacity-70"
+          : "border-border/50 bg-card/40 hover:border-primary/30 hover:shadow-xl hover:shadow-violet-900/10"
       }`}
     >
       <div className="flex items-start gap-3">

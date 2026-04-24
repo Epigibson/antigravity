@@ -102,7 +102,7 @@ export default function AuditPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
         <CardContent className="pt-6">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
@@ -143,7 +143,7 @@ export default function AuditPage() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:border-primary/20">
         <CardHeader>
           <CardTitle className="text-base">
             {loading ? (

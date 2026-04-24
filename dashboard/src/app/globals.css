@@ -165,4 +165,17 @@
   .gradient-teal {
     background: linear-gradient(135deg, oklch(0.596 0.17 162), oklch(0.696 0.17 185));
   }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
 }

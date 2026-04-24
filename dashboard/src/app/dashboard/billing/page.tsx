@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import StripeCheckoutModal from "@/components/stripe-checkout-modal";
+import { InnovativeLoader } from "@/components/ui/innovative-loader";
 import {
   CreditCard,
   Rocket,
@@ -251,7 +252,7 @@ function BillingPageContent() {
       {/* ─── Current Plan + Usage ─── */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Plan actual card */}
-        <Card className="lg:col-span-1 relative overflow-hidden border-primary/30">
+        <Card className="lg:col-span-1 relative overflow-hidden border-primary/30 glass bg-card/40 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:-translate-y-1">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -336,7 +337,7 @@ function BillingPageContent() {
         </Card>
 
         {/* Usage card */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 glass bg-card/40 border-border/50 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BarChart3 className="h-4 w-4" />
@@ -405,12 +406,12 @@ function BillingPageContent() {
             return (
               <Card
                 key={plan.key}
-                className={`relative overflow-visible transition-all duration-300 hover:-translate-y-1 ${
+                className={`relative overflow-visible glass bg-card/40 transition-all duration-300 hover:-translate-y-1 ${
                   isCurrent
                     ? "border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20"
                     : plan.popular
                     ? "border-primary/40 shadow-md hover:shadow-xl hover:shadow-violet-900/10"
-                    : "hover:border-border hover:shadow-md"
+                    : "border-border/50 hover:border-border hover:shadow-xl hover:shadow-violet-900/10"
                 }`}
               >
                 {/* Popular badge */}
@@ -514,7 +515,7 @@ function BillingPageContent() {
       </div>
 
       {/* ─── FAQ / Info ─── */}
-      <Card className="bg-muted/30">
+      <Card className="glass bg-card/40 border-border/50">
         <CardContent className="py-6">
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl gradient-violet text-white">
@@ -546,7 +547,7 @@ function BillingPageContent() {
 // Wrap with Suspense for useSearchParams
 export default function BillingPageWrapper() {
   return (
-    <Suspense fallback={<div className="flex h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}>
+    <Suspense fallback={<InnovativeLoader fullScreen={true} message="Cargando facturación..." />}>
       <BillingPageContent />
     </Suspense>
   );

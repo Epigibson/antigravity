@@ -56,8 +56,23 @@ export default function DashboardLayout({
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-screen flex-col items-center justify-center gap-6 bg-background">
+        <div className="relative flex h-24 w-24 items-center justify-center">
+          {/* Animated glow rings */}
+          <div className="absolute inset-0 animate-ping rounded-full bg-primary/20 duration-1000" />
+          <div className="absolute -inset-4 animate-pulse rounded-full bg-violet-500/10 duration-2000" />
+          <div className="absolute -inset-8 animate-pulse rounded-full bg-fuchsia-500/5 duration-3000" />
+          
+          {/* Center crystal/core */}
+          <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600 to-fuchsia-500 shadow-2xl shadow-violet-500/40">
+            <Loader2 className="h-6 w-6 text-white animate-spin" />
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-center gap-1">
+          <h3 className="text-sm font-semibold tracking-wide text-foreground animate-pulse">Iniciando Sesión...</h3>
+          <p className="text-xs text-muted-foreground">Verificando tus credenciales de Nexus</p>
+        </div>
       </div>
     );
   }
@@ -72,7 +87,7 @@ export default function DashboardLayout({
       {/* ─── Sidebar ─── */}
       <aside
         className={cn(
-          "flex flex-col border-r border-border bg-sidebar z-20 transition-all duration-300 ease-in-out shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-violet-900/10",
+          "flex flex-col border-r border-border/50 glass bg-card/40 z-20 transition-all duration-300 ease-in-out shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-violet-900/10",
           collapsed ? "w-[68px]" : "w-[260px]"
         )}
       >
@@ -123,10 +138,10 @@ export default function DashboardLayout({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                  "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden group",
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "text-primary shadow-[inset_2px_0_0_0_hsl(var(--primary))] bg-gradient-to-r from-primary/15 to-transparent"
+                    : "text-muted-foreground hover:bg-primary/5 hover:text-foreground hover:translate-x-1"
                 )}
               >
                 <item.icon
@@ -140,7 +155,7 @@ export default function DashboardLayout({
 
         {/* CLI Hint */}
         {!collapsed && (
-          <div className="mx-3 mb-3 rounded-lg border border-border bg-card/50 p-3">
+          <div className="mx-3 mb-3 rounded-xl border border-border/50 glass bg-card/30 p-3 shadow-sm shadow-violet-900/5 transition-all hover:bg-card/50">
             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <Terminal className="h-3.5 w-3.5" />
               CLI rápido

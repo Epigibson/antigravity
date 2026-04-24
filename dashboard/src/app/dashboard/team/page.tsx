@@ -16,6 +16,15 @@ import {
   Check,
   Lock,
 } from "lucide-react";
+import { InnovativeLoader } from "@/components/ui/innovative-loader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 type Member = {
   user_id: string;
@@ -38,8 +47,6 @@ export default function TeamPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
   const [inviting, setInviting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [planLimits, setPlanLimits] = useState<{ plan: string; limits: Record<string, unknown>; usage: { projects: number; members: number } } | null>(null);
 
   const loadData = async () => {
@@ -51,7 +58,7 @@ export default function TeamPage() {
       setMembers(membersData);
       setPlanLimits(limitsData);
     } catch {
-      setError("Error cargando datos del equipo");
+      toast.error("Error cargando datos del equipo");
     } finally {
       setLoading(false);
     }
@@ -65,15 +72,13 @@ export default function TeamPage() {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
     setInviting(true);
-    setError(null);
-    setSuccess(null);
     try {
       await api.inviteTeamMember(inviteEmail.trim(), inviteRole);
-      setSuccess(`Invitación enviada a ${inviteEmail}`);
+      toast.success(`Invitación enviada a ${inviteEmail}`);
       setInviteEmail("");
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al invitar");
+      toast.error(err instanceof Error ? err.message : "Error al invitar");
     } finally {
       setInviting(false);
     }
@@ -83,19 +88,20 @@ export default function TeamPage() {
     if (!confirm(`¿Eliminar a ${email} del equipo?`)) return;
     try {
       await api.removeMember(userId);
-      setSuccess(`${email} fue eliminado del equipo`);
+      toast.success(`${email} fue eliminado del equipo`);
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al eliminar");
+      toast.error(err instanceof Error ? err.message : "Error al eliminar");
     }
   };
 
   const handleRoleChange = async (userId: string, role: string) => {
     try {
       await api.updateMemberRole(userId, role);
+      toast.success("Rol actualizado");
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cambiar rol");
+      toast.error(err instanceof Error ? err.message : "Error al cambiar rol");
     }
   };
 
@@ -105,11 +111,7 @@ export default function TeamPage() {
   const isUnlimited = maxMembers > 9999;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <InnovativeLoader message="Cargando equipo..." subMessage="Obteniendo roles y permisos" />;
   }
 
   return (
@@ -142,15 +144,15 @@ export default function TeamPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border/50 glass bg-card/40 p-4 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:-translate-y-1">
           <p className="text-2xl font-bold font-mono">{currentMembers}</p>
           <p className="text-xs text-muted-foreground">Miembros</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border/50 glass bg-card/40 p-4 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:-translate-y-1">
           <p className="text-2xl font-bold font-mono">{isUnlimited ? "∞" : maxMembers}</p>
           <p className="text-xs text-muted-foreground">Máximo del plan</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border/50 glass bg-card/40 p-4 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10 hover:-translate-y-1">
           <p className="text-2xl font-bold font-mono">{planLimits?.usage?.projects || 0}</p>
           <p className="text-xs text-muted-foreground">Proyectos activos</p>
         </div>
@@ -158,7 +160,7 @@ export default function TeamPage() {
 
       {/* Invite form */}
       {isPaidPlan && (
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border/50 glass bg-card/40 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10">
           <h2 className="text-sm font-semibold flex items-center gap-2 mb-4">
             <UserPlus className="h-4 w-4 text-primary" />
             Invitar Miembro
@@ -175,14 +177,15 @@ export default function TeamPage() {
                 required
               />
             </div>
-            <select
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
-            >
-              <option value="member">Miembro</option>
-              <option value="admin">Admin</option>
-            </select>
+            <Select value={inviteRole} onValueChange={(v) => v && setInviteRole(v)}>
+              <SelectTrigger className="w-[140px] rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 outline-none h-auto">
+                <SelectValue placeholder="Rol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Miembro</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
             <button
               type="submit"
               disabled={inviting || currentMembers >= maxMembers}
@@ -195,24 +198,8 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Alerts */}
-      {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400 flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
-          <button onClick={() => setError(null)} className="ml-auto text-red-400/60 hover:text-red-400">✕</button>
-        </div>
-      )}
-      {success && (
-        <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-400 flex items-center gap-2">
-          <Check className="h-4 w-4 shrink-0" />
-          {success}
-          <button onClick={() => setSuccess(null)} className="ml-auto text-emerald-400/60 hover:text-emerald-400">✕</button>
-        </div>
-      )}
-
       {/* Members list */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border/50 glass bg-card/40 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/10">
         <div className="px-5 py-3 border-b border-border">
           <h2 className="text-sm font-semibold">Miembros ({currentMembers})</h2>
         </div>
@@ -255,14 +242,15 @@ export default function TeamPage() {
                 {/* Actions */}
                 {isPaidPlan && !isOwner && !isSelf && (
                   <div className="flex items-center gap-1">
-                    <select
-                      value={member.role}
-                      onChange={(e) => handleRoleChange(member.user_id, e.target.value)}
-                      className="text-xs rounded border border-border bg-background px-2 py-1 outline-none"
-                    >
-                      <option value="member">Miembro</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                    <Select value={member.role} onValueChange={(v) => v && handleRoleChange(member.user_id, v)}>
+                      <SelectTrigger className="w-[110px] h-8 text-xs rounded border border-border bg-background focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 outline-none">
+                        <SelectValue placeholder="Rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="member" className="text-xs">Miembro</SelectItem>
+                        <SelectItem value="admin" className="text-xs">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <button
                       onClick={() => handleRemove(member.user_id, member.email)}
                       className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-colors"
