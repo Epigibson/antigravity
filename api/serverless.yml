@@ -13,6 +13,17 @@ provider:
     # Estas variables deben existir en el entorno al momento del despliegue 
     # o puedes usar Parameter Store / Secrets Manager
     DATABASE_URL: ${env:DATABASE_URL, ''}
+    SUPABASE_URL: ${env:SUPABASE_URL, ''}
+    SUPABASE_ANON_KEY: ${env:SUPABASE_ANON_KEY, ''}
+    SECRET_KEY: ${env:SECRET_KEY, ''}
+    ACCESS_TOKEN_EXPIRE_MINUTES: ${env:ACCESS_TOKEN_EXPIRE_MINUTES, ''}
+    CORS_ORIGINS: ${env:CORS_ORIGINS, ''}
+    DEBUG: ${env:DEBUG, 'false'}
+    FRONTEND_URL: ${env:FRONTEND_URL, ''}
+    STRIPE_SECRET_KEY: ${env:STRIPE_SECRET_KEY, ''}
+    STRIPE_PUBLISHABLE_KEY: ${env:STRIPE_PUBLISHABLE_KEY, ''}
+    STRIPE_WEBHOOK_SECRET: ${env:STRIPE_WEBHOOK_SECRET, ''}
+    STRIPE_PREMIUM_PRICE_ID: ${env:STRIPE_PREMIUM_PRICE_ID, ''}
     ENVIRONMENT: production
   httpApi:
     cors: true

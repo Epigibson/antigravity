@@ -46,5 +46,15 @@ jobs:
       - name: Deploy to AWS
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
+          CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+          DEBUG: ${{ secrets.DEBUG }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PREMIUM_PRICE_ID: ${{ secrets.STRIPE_PREMIUM_PRICE_ID }}
         run: serverless deploy --stage prod
