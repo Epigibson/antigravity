@@ -168,6 +168,12 @@ func (o *Orchestrator) SwitchWithProject(project *domain.Project, envName string
 					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_REGION", profile.Region))
 					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_DEFAULT_REGION", profile.Region))
 				}
+				if v, ok := profile.Extra["access_key_id"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_ACCESS_KEY_ID", v))
+				}
+				if v, ok := profile.Extra["secret_access_key"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_SECRET_ACCESS_KEY", v))
+				}
 			case "vercel":
 				if v, ok := profile.Extra["token"]; ok && v != "" {
 					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("VERCEL_TOKEN", v))
