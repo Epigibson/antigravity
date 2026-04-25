@@ -66,20 +66,19 @@ async def create_audit(
 ):
     """Crear un log de auditoría (normalmente usado por el CLI vía X-API-Key)."""
     try:
+        from app.services.project_service import get_user_org_id
+        org_id = await get_user_org_id(db, user.id)
+
         project_id = None
-        if body.project_name:
+        if body.project_name and org_id:
             from sqlalchemy import or_
-            from app.services.project_service import get_user_org_id
-            
-            org_id = await get_user_org_id(db, user.id)
-            if org_id:
-                proj_q = await db.execute(
-                    select(Project.id).where(
-                        or_(Project.slug == body.project_name, Project.name == body.project_name),
-                        Project.org_id == org_id
-                    ).limit(1)
-                )
-                project_id = proj_q.scalar_one_or_none()
+            proj_q = await db.execute(
+                select(Project.id).where(
+                    or_(Project.slug == body.project_name, Project.name == body.project_name),
+                    Project.org_id == org_id
+                ).limit(1)
+            )
+            project_id = proj_q.scalar_one_or_none()
 
         from app.models.audit import AuditAction
         import enum
@@ -92,6 +91,7 @@ async def create_audit(
 
         entry = AuditLog(
             user_id=user.id,
+            org_id=org_id,
             project_id=project_id,
             action=safe_action,
             environment=body.environment,

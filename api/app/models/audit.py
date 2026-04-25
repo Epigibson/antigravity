@@ -43,7 +43,7 @@ class AuditLog(Base):
     project_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("projects.id"))
     skill_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("skill_definitions.id"))
     action: Mapped[str] = mapped_column(
-        SAEnum(AuditAction, native_enum=False, length=30), nullable=False
+        String(100), nullable=False
     )
     environment: Mapped[str | None] = mapped_column(String(50))
     message: Mapped[str] = mapped_column(String(500), nullable=False)
