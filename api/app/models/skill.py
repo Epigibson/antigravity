@@ -16,6 +16,8 @@ class SkillCategory(str, enum.Enum):
     cli_switching = "cli-switching"
     documentation = "documentation"
     sandbox = "sandbox"
+    scripts = "scripts"
+    parallel = "parallel"
 
 
 class SkillDefinition(Base):

@@ -30,7 +30,7 @@ provider:
     cors:
       allowedOrigins:
         - http://localhost:3000
-        - https://antigravity-production-a677.up.railway.app
+        - https://qegsj4k7m5.execute-api.us-east-1.amazonaws.com
       allowedHeaders:
         - Content-Type
         - Authorization

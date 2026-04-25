@@ -15,6 +15,7 @@ const (
 	SkillCategoryDocs     SkillCategory = "documentation"
 	SkillCategorySandbox  SkillCategory = "sandbox"
 	SkillCategoryScripts  SkillCategory = "scripts"
+	SkillCategoryParallel SkillCategory = "parallel"
 )
 
 // SkillStatus represents the execution result of a skill.

@@ -30,6 +30,8 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   "context-injection": { label: "Context", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
   "documentation": { label: "Docs", color: "text-pink-400 bg-pink-400/10 border-pink-400/20" },
   "sandbox": { label: "Sandbox", color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
+  "scripts": { label: "Scripts", color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20" },
+  "parallel": { label: "Parallel", color: "text-violet-400 bg-violet-400/10 border-violet-400/20" },
 };
 
 export default function SkillsPage() {

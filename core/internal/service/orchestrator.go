@@ -100,7 +100,18 @@ func (o *Orchestrator) SwitchWithProject(project *domain.Project, envName string
 	// 4. Get enabled skills sorted by priority
 	skills := project.GetEnabledSkills()
 
-	// 5. Execute each skill
+	// 5. Check if Parallel Switch is enabled
+	parallelMode := false
+	var nonParallelSkills []domain.Skill
+	for _, skill := range skills {
+		if skill.Category == domain.SkillCategoryParallel {
+			parallelMode = true
+		} else {
+			nonParallelSkills = append(nonParallelSkills, skill)
+		}
+	}
+
+	// 6. Execute skills (parallel or sequential)
 	results := make([]domain.SkillResult, 0, len(skills)+len(preResults))
 	results = append(results, preResults...)
 	var shellLines []string
@@ -117,21 +128,56 @@ func (o *Orchestrator) SwitchWithProject(project *domain.Project, envName string
 	shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("NEXUS_ACTIVE_ENV", envName))
 	shellLines = append(shellLines, "")
 
-	for _, skill := range skills {
-		result := o.executeSkill(project, env, &skill)
-		results = append(results, *result)
-
-		// Collect shell commands from env injection
-		if skill.Category == domain.SkillCategoryContext && result.IsSuccess() {
-			for key, value := range env.EnvVars {
-				shellLines = append(shellLines, o.shellEmitter.EmitSetEnv(key, value))
+	if parallelMode {
+		// Parallel execution mode — use the ParallelExecutor
+		if pe, ok := o.executors[string(domain.SkillCategoryParallel)]; ok {
+			// Type assert to access ExecuteAll
+			type parallelRunner interface {
+				ExecuteAll(*domain.Project, *domain.EnvironmentConfig, []domain.Skill, int, time.Duration) []domain.SkillResult
 			}
-			shellLines = append(shellLines, "")
+			if pr, ok := pe.(parallelRunner); ok {
+				parallelResults := pr.ExecuteAll(project, env, nonParallelSkills, 5, 60*time.Second)
+				results = append(results, parallelResults...)
+
+				// Log all results
+				for i, r := range parallelResults {
+					o.logAudit(domain.AuditAction("skill_"+string(nonParallelSkills[i].Category)), project.Name, envName,
+						nonParallelSkills[i].Name, r.Message, r.IsSuccess())
+				}
+
+				// Add a parallel mode indicator result
+				results = append(results, domain.SkillResult{
+					SkillName: "⚡ Parallel Switch",
+					Status:    domain.SkillStatusSuccess,
+					Message:   fmt.Sprintf("Executed %d skills in parallel", len(nonParallelSkills)),
+					Duration:  0,
+				})
+			}
 		}
 
-		// Log the skill result to audit
-		o.logAudit(domain.AuditAction("skill_"+string(skill.Category)), project.Name, envName,
-			skill.Name, result.Message, result.IsSuccess())
+		// Collect env vars for shell script
+		for key, value := range env.EnvVars {
+			shellLines = append(shellLines, o.shellEmitter.EmitSetEnv(key, value))
+		}
+		shellLines = append(shellLines, "")
+	} else {
+		// Sequential execution mode (default)
+		for _, skill := range skills {
+			result := o.executeSkill(project, env, &skill)
+			results = append(results, *result)
+
+			// Collect shell commands from env injection
+			if skill.Category == domain.SkillCategoryContext && result.IsSuccess() {
+				for key, value := range env.EnvVars {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv(key, value))
+				}
+				shellLines = append(shellLines, "")
+			}
+
+			// Log the skill result to audit
+			o.logAudit(domain.AuditAction("skill_"+string(skill.Category)), project.Name, envName,
+				skill.Name, result.Message, result.IsSuccess())
+		}
 	}
 
 	// 6. Handle CLI profile switching

@@ -231,6 +231,7 @@ func buildOrchestrator() (*service.Orchestrator, error) {
 	envInjector := executor.NewEnvInjector()
 	gitSwitcher := executor.NewGitSwitcher()
 	scriptRunner := executor.NewScriptRunner()
+	docGenerator := executor.NewDocGenerator()
 
 	allProfilers := executor.AllProfilers()
 	cliProfilers := make([]port.CLIProfiler, 0, len(allProfilers))
@@ -248,9 +249,24 @@ func buildOrchestrator() (*service.Orchestrator, error) {
 
 	shellEmitter := executor.DetectShellEmitter()
 
+	// Build the base executors map
+	baseExecutors := []port.SkillExecutor{envInjector, gitSwitcher, scriptRunner, docGenerator}
+
+	// Create a map for the parallel executor to reference
+	executorMap := make(map[string]port.SkillExecutor)
+	for _, e := range baseExecutors {
+		executorMap[e.Name()] = e
+	}
+
+	// Create the parallel executor (wraps all other executors for concurrent execution)
+	parallelExecutor := executor.NewParallelExecutor(executorMap)
+
+	// All executors including the parallel one
+	allExecutors := append(baseExecutors, parallelExecutor)
+
 	orch := service.NewOrchestrator(service.OrchestratorConfig{
 		ConfigReader:  reader,
-		Executors:     []port.SkillExecutor{envInjector, gitSwitcher, scriptRunner},
+		Executors:     allExecutors,
 		CLIProfilers:  cliProfilers,
 		AuditLogger:   auditLogger,
 		ShellEmitter:  shellEmitter,
