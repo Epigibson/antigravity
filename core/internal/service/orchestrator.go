@@ -138,6 +138,53 @@ func (o *Orchestrator) SwitchWithProject(project *domain.Project, envName string
 	cliResults := o.switchCLIProfiles(project, env, envName)
 	results = append(results, cliResults...)
 
+	// Collect shell commands from CLI profile switching
+	for _, profile := range env.CLIProfiles {
+		if profile.Extra != nil {
+			switch profile.Tool {
+			case "stripe":
+				if v, ok := profile.Extra["secret_key"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("STRIPE_API_KEY", v))
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("STRIPE_SECRET_KEY", v))
+				}
+				if v, ok := profile.Extra["publishable_key"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("STRIPE_PUBLISHABLE_KEY", v))
+				}
+				if profile.Account != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("STRIPE_ACCOUNT", profile.Account))
+				}
+			case "supabase":
+				if profile.Account != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("SUPABASE_PROJECT_REF", profile.Account))
+				}
+				if v, ok := profile.Extra["token"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("SUPABASE_ACCESS_TOKEN", v))
+				}
+			case "aws":
+				if profile.Account != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_PROFILE", profile.Account))
+				}
+				if profile.Region != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_REGION", profile.Region))
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("AWS_DEFAULT_REGION", profile.Region))
+				}
+			case "vercel":
+				if v, ok := profile.Extra["token"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("VERCEL_TOKEN", v))
+				}
+			case "railway":
+				if v, ok := profile.Extra["token"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("RAILWAY_TOKEN", v))
+				}
+			case "fly":
+				if v, ok := profile.Extra["token"]; ok && v != "" {
+					shellLines = append(shellLines, o.shellEmitter.EmitSetEnv("FLY_API_TOKEN", v))
+				}
+			}
+		}
+	}
+	shellLines = append(shellLines, "")
+
 	// 7. Run POST-switch hooks
 	postResults := o.runHooks(project, env, envName, "post")
 	results = append(results, postResults...)

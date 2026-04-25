@@ -240,18 +240,22 @@ func (s *SupabaseProfiler) IsInstalled() bool {
 }
 
 func (s *SupabaseProfiler) CurrentProfile() (string, error) {
-	// Try to detect the currently linked project
+	if ref := os.Getenv("SUPABASE_PROJECT_REF"); ref != "" {
+		return "linked → " + ref, nil
+	}
+
+	// Fallback: Try to detect from local supabase folder
+	if data, err := os.ReadFile("supabase/.temp/project-ref"); err == nil {
+		return "linked → " + strings.TrimSpace(string(data)), nil
+	}
+
+	// If neither env var nor local file is found, check if we're authenticated
 	cmd := exec.Command("supabase", "projects", "list")
-	cmd.Env = append(os.Environ())
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return "unknown", nil
+	if err := cmd.Run(); err == nil {
+		return "authenticated (no active link)", nil
 	}
-	out := strings.TrimSpace(string(output))
-	if out == "" {
-		return "none", nil
-	}
-	return "linked", nil
+
+	return "none", nil
 }
 
 func (s *SupabaseProfiler) Switch(profile domain.CLIProfile) error {
@@ -510,9 +514,19 @@ func (r *RailwayProfiler) IsInstalled() bool {
 }
 
 func (r *RailwayProfiler) CurrentProfile() (string, error) {
-	cmd := exec.Command("railway", "whoami")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "railway", "whoami")
+	if token := os.Getenv("RAILWAY_TOKEN"); token != "" {
+		cmd.Env = append(os.Environ(), "RAILWAY_TOKEN="+token)
+	}
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		if os.Getenv("RAILWAY_TOKEN") != "" {
+			return "none (invalid token)", nil
+		}
 		return "none", nil
 	}
 	return strings.TrimSpace(string(output)), nil
