@@ -18,16 +18,14 @@ provider:
     SUPABASE_ANON_KEY: ${env:SUPABASE_ANON_KEY, ''}
     SECRET_KEY: ${env:SECRET_KEY, 'dev-secret-key-change-in-production'}
     ACCESS_TOKEN_EXPIRE_MINUTES: ${env:ACCESS_TOKEN_EXPIRE_MINUTES, '1440'}
-    CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://antigravity-production-a677.up.railway.app"]'}
+    CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://master.d3cehroonlwhdk.amplifyapp.com"]'}
     DEBUG: ${env:DEBUG, 'false'}
-    FRONTEND_URL: ${env:FRONTEND_URL, 'https://antigravity-production-a677.up.railway.app'}
+    FRONTEND_URL: ${env:FRONTEND_URL, 'https://master.d3cehroonlwhdk.amplifyapp.com'}
     STRIPE_SECRET_KEY: ${env:STRIPE_SECRET_KEY, ''}
     STRIPE_PUBLISHABLE_KEY: ${env:STRIPE_PUBLISHABLE_KEY, ''}
     STRIPE_WEBHOOK_SECRET: ${env:STRIPE_WEBHOOK_SECRET, ''}
     STRIPE_PREMIUM_PRICE_ID: ${env:STRIPE_PREMIUM_PRICE_ID, ''}
     ENVIRONMENT: production
-  CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://master.d3cehroonlwhdk.amplifyapp.com"]'}
-    FRONTEND_URL: ${env:FRONTEND_URL, 'https://master.d3cehroonlwhdk.amplifyapp.com'}
   httpApi:
     cors:
       allowedOrigins:
