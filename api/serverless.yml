@@ -43,6 +43,13 @@ provider:
         - PATCH
       allowCredentials: true
 
+package:
+  patterns:
+    - '!**/.env'
+    - '!**/.env.*'
+    - '!**/tests/**'
+    - '!**/__pycache__/**'
+
 functions:
   api:
     handler: app.main.handler

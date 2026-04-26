@@ -46,6 +46,9 @@ jobs:
       - name: Set up QEMU (for ARM64 cross-compilation)
         uses: docker/setup-qemu-action@v3
 
+      - name: Clean up local env files (Security Hardening)
+        run: rm -f .env .env.*
+
       - name: Deploy to AWS
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
