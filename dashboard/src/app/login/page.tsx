@@ -35,10 +35,10 @@ export default function LoginPage() {
         setPassword("");
       } else if (mode === "login") {
         const result = await login(email, password);
-        if (result.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_SOFTWARE_TOKEN_MFA') {
+        if (result.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE') {
           setMode("mfa");
           toast.info("Introduce tu código de la app autenticadora");
-        } else if (result.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_MFA') {
+        } else if (result.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_CODE') {
            setMode("mfa");
            toast.info("Introduce el código enviado por SMS");
         }
