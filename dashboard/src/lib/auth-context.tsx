@@ -200,13 +200,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setupTotp = useCallback(async (): Promise<MfaSetupResult> => {
     const totpSetupDetails = await setUpTOTP();
-    const appName = 'Nexus';
-    const setupUri = totpSetupDetails.getSetupUri(appName);
+    const secret = totpSetupDetails.sharedSecret;
+    const issuer = 'Nexus';
+    const account = user?.email || 'user';
+    // Build TOTP URI manually so authenticator apps show the email, not the UUID
+    const qrCodeUri = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
     return {
-      qrCodeUri: setupUri.toString(),
-      secretKey: totpSetupDetails.sharedSecret,
+      qrCodeUri,
+      secretKey: secret,
     };
-  }, []);
+  }, [user?.email]);
 
   const verifyTotp = useCallback(async (code: string) => {
     await verifyTOTPSetup({ code });
