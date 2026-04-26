@@ -1,0 +1,74 @@
+name: Release Nexus CLI
+
+on:
+  push:
+    tags:
+      - 'v*' # Se ejecuta automáticamente cuando creas un tag como v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build Binary
+        working-directory: ./core
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          BINARY_NAME=nexus
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            BINARY_NAME=nexus.exe
+          fi
+          
+          # Compilar
+          go build -ldflags="-s -w" -o dist/$BINARY_NAME ./cmd/nexus
+          
+          # Comprimir en formato adecuado
+          cd dist
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            zip nexus-${{ matrix.os }}-${{ matrix.arch }}.zip $BINARY_NAME
+          else
+            tar -czvf nexus-${{ matrix.os }}-${{ matrix.arch }}.tar.gz $BINARY_NAME
+          fi
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            core/dist/*.tar.gz
+            core/dist/*.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
