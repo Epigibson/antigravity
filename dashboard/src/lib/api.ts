@@ -27,7 +27,12 @@ async function handleResponse<T>(res: Response): Promise<T> {
     if (typeof window !== "undefined") {
       localStorage.removeItem("ag_token");
       localStorage.removeItem("ag_user");
-      window.location.href = "/login";
+
+      // Evitar bucle infinito de recargas si ya estamos en una ruta de autenticación
+      const isAuthRoute = ['/login', '/', '/register'].includes(window.location.pathname);
+      if (!isAuthRoute) {
+        window.location.href = "/login";
+      }
     }
     throw new Error("Session expired");
   }
