@@ -1,0 +1,682 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Nexus — Cambia de Proyecto en un Solo Comando">
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="#" class="nav-logo">
+        <img src="/images/nexus-icon.png" alt="Nexus" />
+        <div class="logo-text">
+          <span>Nexus</span>
+          <span class="logo-sub">Control Center</span>
+        </div>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#problema">Problema</a>
+        <a href="#solucion">Solución</a>
+        <a href="#features">Features</a>
+        <a href="#integraciones">Integraciones</a>
+        <a href="#planes">Planes</a>
+        <a href="https://minor.mintlify.app/what-is-nexus" target="_blank">Docs</a>
+        <a href="https://nexus.epigibson.com" class="nav-cta" target="_blank">Dashboard →</a>
+      </div>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Menú">☰</button>
+    </div>
+  </nav>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="pulse"></span>
+        Open Source · CLI + Dashboard + API
+      </div>
+
+      <h1>
+        Cambia de proyecto<br />
+        <span class="gradient-text" id="heroScramble" data-final="en un solo comando.">en un solo comando.</span>
+      </h1>
+
+      <p>
+        Nexus elimina la fricción del context switching. GitHub, AWS, Supabase, Vercel, MongoDB — todas tus credenciales, entornos y sesiones CLI cambian instantáneamente.
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://minor.mintlify.app/installation" class="btn-primary" target="_blank">
+          ⚡ Instalar Nexus
+        </a>
+        <a href="https://minor.mintlify.app/what-is-nexus" class="btn-secondary" target="_blank">
+          📖 Leer Docs
+        </a>
+      </div>
+
+      <!-- Animated Terminal -->
+      <div class="hero-visual">
+        <div class="terminal-window">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">~/proyectos — nexus</span>
+          </div>
+          <div class="terminal-body" id="terminalBody">
+            <div class="terminal-line">
+              <span class="terminal-prompt">❯</span>
+              <span class="terminal-cmd" id="typewriter"></span>
+              <span id="cursor">▊</span>
+            </div>
+            <div id="terminalOutput"></div>
+          </div>
+          <!-- Interactive input -->
+          <div class="terminal-interactive">
+            <span class="terminal-prompt">❯</span>
+            <input type="text" id="terminalInput" class="terminal-input" placeholder="Escribe un comando nexus..." autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid reveal">
+        <div class="stat-item">
+          <div class="stat-number" data-target="10">0</div>
+          <div class="stat-label">CLI Tools Soportados</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" data-target="12">0</div>
+          <div class="stat-label">Skills Disponibles</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" data-target="30" data-suffix="+">0</div>
+          <div class="stat-label">API Endpoints</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" data-target="1" data-suffix="cmd">0</div>
+          <div class="stat-label">Para Cambiar Todo</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PROBLEM ========== -->
+  <section class="section problem-section" id="problema">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label" style="color: oklch(0.769 0.188 70.08); background: oklch(0.769 0.188 70.08 / 10%); border-color: oklch(0.769 0.188 70.08 / 20%);">⚠️ El Problema</span>
+        <h2 class="section-title">El context switching <span class="gradient-text">te está robando tiempo.</span></h2>
+        <p class="section-subtitle">
+          Los desarrolladores que trabajan en múltiples proyectos pierden horas por semana iniciando y cerrando sesión en herramientas CLI.
+        </p>
+      </div>
+
+      <div class="problem-grid">
+        <div class="problem-card reveal">
+          <div class="problem-icon">🔐</div>
+          <h3>Credenciales Dispersas</h3>
+          <p>Cada proyecto tiene diferentes cuentas de GitHub, perfiles de AWS, orgs de Supabase, claves API… ¿dónde quedó la de producción?</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">⏰</div>
+          <h3>Tiempo Perdido</h3>
+          <p>5-10 minutos cada vez que cambias de proyecto. Eso son <strong>2+ horas por semana</strong> solo en login/logout de herramientas CLI.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">💥</div>
+          <h3>Errores de Contexto</h3>
+          <p>Hacer deploy al proyecto equivocado, pushear con el Git user incorrecto, o usar las variables de entorno del proyecto anterior.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">🧩</div>
+          <h3>Proceso Manual</h3>
+          <p><code>gh auth switch → aws sso login → supabase link → vercel switch → mongosh...</code> cada vez.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">👻</div>
+          <h3>Cero Trazabilidad</h3>
+          <p>No existe un registro de quién cambió a qué proyecto, cuándo y en qué entorno. Imposible hacer auditoría de seguridad.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">🤯</div>
+          <h3>Fatiga Mental</h3>
+          <p>Recordar qué cuenta, qué perfil, qué rama y qué variables usar para cada proyecto agota tu capacidad cognitiva.</p>
+        </div>
+      </div>
+      <!-- Before / After Comparison -->
+      <div class="comparison reveal">
+        <div class="comparison-grid">
+          <div class="comparison-card before">
+            <span class="comparison-tag bad">❌ Sin Nexus — 5+ minutos</span>
+            <div class="comparison-code">
+              <span class="line strike">$ gh auth switch --user epigibson</span>
+              <span class="line strike">$ export AWS_PROFILE=prod-profile</span>
+              <span class="line strike">$ supabase link --project-ref xyzabc</span>
+              <span class="line strike">$ vercel switch my-team</span>
+              <span class="line strike">$ git config user.email "me@prod.com"</span>
+              <span class="line strike">$ git checkout main</span>
+              <span class="line strike">$ export DATABASE_URL=postgres://...</span>
+              <span class="line strike">$ export STRIPE_KEY=sk_live_...</span>
+            </div>
+          </div>
+          <div class="comparison-vs">VS</div>
+          <div class="comparison-card after">
+            <span class="comparison-tag good">✅ Con Nexus — 1.2 segundos</span>
+            <div class="comparison-code">
+              <span class="line"><span class="highlight">$ nexus switch my-saas-app --env production</span></span>
+              <span class="line">&nbsp;</span>
+              <span class="line" style="color: var(--accent-teal)">✅ Todo configurado automáticamente.</span>
+              <span class="line" style="color: var(--accent-teal)">✅ Credenciales encriptadas.</span>
+              <span class="line" style="color: var(--accent-teal)">✅ Audit trail registrado.</span>
+              <span class="line" style="color: var(--accent-teal)">✅ 0 errores de contexto.</span>
+              <span class="line">&nbsp;</span>
+              <span class="line" style="color: var(--accent-violet)">🚀 Context switch complete!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SOLUTION ========== -->
+  <section class="section" id="solucion">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label teal">✨ La Solución</span>
+        <h2 class="section-title">Un comando. <span class="gradient-text">Todo cambia.</span></h2>
+        <p class="section-subtitle">
+          Nexus es como tener un asistente que prepara todo tu entorno de trabajo cuando llegas a un nuevo proyecto.
+        </p>
+      </div>
+
+      <div class="solution-grid">
+        <div class="solution-steps">
+          <div class="step reveal">
+            <div class="step-number">1</div>
+            <div>
+              <h3>Configura tus proyectos</h3>
+              <p>Define tus proyectos, entornos y credenciales desde el Dashboard web. Encriptados con AES-256-GCM.</p>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="step-number">2</div>
+            <div>
+              <h3>Conecta el CLI</h3>
+              <p>Un <code>nexus login</code> con tu API key y tu terminal queda conectada a tu cuenta.</p>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="step-number">3</div>
+            <div>
+              <h3>Haz switch</h3>
+              <p><code>nexus switch mi-proyecto --env production</code> y GitHub, AWS, Supabase, Vercel, Git y todas tus variables cambian al instante.</p>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="step-number">4</div>
+            <div>
+              <h3>Trabaja sin fricción</h3>
+              <p>Todo está configurado. Sin errores de contexto. Sin perder tiempo. Con un audit trail inmutable de cada acción.</p>
+            </div>
+          </div>
+        </div>
+        <div class="solution-image reveal">
+          <img src="/images/hero-illustration.png" alt="Nexus context switching" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FEATURES ========== -->
+  <section class="section features-section" id="features">
+    <div class="container">
+      <div style="text-align: center;" class="reveal">
+        <span class="section-label">🚀 Capacidades</span>
+        <h2 class="section-title">Todo lo que Nexus <span class="gradient-text">puede hacer por ti.</span></h2>
+        <p class="section-subtitle" style="margin: 0 auto;">
+          Un ecosistema completo: CLI en Go, Backend en FastAPI, Dashboard en Next.js y un sistema modular de Skills.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon violet">🔄</div>
+          <h3>Identity Switching</h3>
+          <p>Cambia cuentas de GitHub, perfiles AWS, scopes de Vercel y conexiones de MongoDB con un solo comando.</p>
+          <span class="feature-badge free">Gratis</span>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon teal">🔐</div>
+          <h3>Environment Injection</h3>
+          <p>Variables de entorno y API keys inyectadas automáticamente por proyecto y ambiente (dev, staging, prod).</p>
+          <span class="feature-badge free">Gratis</span>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon fuchsia">🌿</div>
+          <h3>Git State Management</h3>
+          <p>Branch checkouts automáticos, configuración local de Git (email/name) para cada proyecto.</p>
+          <span class="feature-badge free">Gratis</span>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon teal">📋</div>
+          <h3>Audit Trail Inmutable</h3>
+          <p>Registro completo de cada acción: quién, qué proyecto, qué entorno, cuándo. Log local + cloud sync.</p>
+          <span class="feature-badge premium">Premium</span>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon violet">⚡</div>
+          <h3>Parallel Switch</h3>
+          <p>Ejecuta todos los skills en paralelo para switches ultra-rápidos. Fan-out concurrente de integraciones.</p>
+          <span class="feature-badge premium">Premium</span>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon warning">📝</div>
+          <h3>Script Runner & Auto Docs</h3>
+          <p>Ejecuta scripts personalizados post-switch y genera documentación automática (NEXUS_CONTEXT.md).</p>
+          <span class="feature-badge premium">Premium</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TOOLS MARQUEE ========== -->
+  <section class="tools-section" id="integraciones">
+    <div class="container" style="text-align: center; margin-bottom: 40px;">
+      <div class="reveal">
+        <span class="section-label teal">🔧 Integraciones</span>
+        <h2 class="section-title">Compatible con <span class="gradient-text-teal">tus herramientas favoritas.</span></h2>
+      </div>
+    </div>
+    <div class="tools-track" aria-label="Herramientas soportadas">
+      <div class="tool-item"><img src="/github/GitHub_Invertocat_White.png" alt="GitHub" class="tool-logo" /> GitHub CLI</div>
+      <div class="tool-item"><img src="/aws/aws-color.png" alt="AWS" class="tool-logo tool-logo-wide" /> AWS CLI</div>
+      <div class="tool-item"><img src="/supabase/supabase-logo-icon.svg" alt="Supabase" class="tool-logo" /> Supabase</div>
+      <div class="tool-item"><img src="/vercel/vercel-icon-light.svg" alt="Vercel" class="tool-logo" /> Vercel</div>
+      <div class="tool-item"><img src="/mongodb/MongoDB_Logomark_SpringGreen.svg" alt="MongoDB" class="tool-logo" /> MongoDB</div>
+      <div class="tool-item"><img src="/stripe/Stripe wordmark - White.svg" alt="Stripe" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/railway/logotype-light.png" alt="Railway" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/fly.io/logo-landscape-light.svg" alt="Fly.io" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/expo/logo-wordmark-light.png" alt="Expo" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/git/Git-Icon-White.png" alt="Git" class="tool-logo" /> Git</div>
+      <!-- duplicate for infinite scroll -->
+      <div class="tool-item"><img src="/github/GitHub_Invertocat_White.png" alt="GitHub" class="tool-logo" /> GitHub CLI</div>
+      <div class="tool-item"><img src="/aws/aws-color.png" alt="AWS" class="tool-logo tool-logo-wide" /> AWS CLI</div>
+      <div class="tool-item"><img src="/supabase/supabase-logo-icon.svg" alt="Supabase" class="tool-logo" /> Supabase</div>
+      <div class="tool-item"><img src="/vercel/vercel-icon-light.svg" alt="Vercel" class="tool-logo" /> Vercel</div>
+      <div class="tool-item"><img src="/mongodb/MongoDB_Logomark_SpringGreen.svg" alt="MongoDB" class="tool-logo" /> MongoDB</div>
+      <div class="tool-item"><img src="/stripe/Stripe wordmark - White.svg" alt="Stripe" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/railway/logotype-light.png" alt="Railway" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/fly.io/logo-landscape-light.svg" alt="Fly.io" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/expo/logo-wordmark-light.png" alt="Expo" class="tool-logo tool-logo-wide" /></div>
+      <div class="tool-item"><img src="/git/Git-Icon-White.png" alt="Git" class="tool-logo" /> Git</div>
+    </div>
+  </section>
+
+  <!-- ========== DASHBOARD PREVIEW ========== -->
+  <section class="section dashboard-preview">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">🖥️ Dashboard</span>
+        <h2 class="section-title">Controla todo desde <span class="gradient-text">una interfaz premium.</span></h2>
+        <p class="section-subtitle" style="margin: 0 auto;">
+          Gestiona proyectos, entornos, skills, equipo y facturación. Todo en un panel moderno con estadísticas en tiempo real.
+        </p>
+      </div>
+      <div class="preview-wrapper reveal">
+        <img src="/images/dashboard-preview.png" alt="Nexus Dashboard" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PRICING ========== -->
+  <section class="section pricing-section" id="planes">
+    <div class="container">
+      <div style="text-align: center;" class="reveal">
+        <span class="section-label">💎 Planes</span>
+        <h2 class="section-title">Empieza gratis. <span class="gradient-text">Escala cuando quieras.</span></h2>
+        <p class="section-subtitle" style="margin: 0 auto;">
+          Nexus tiene un plan gratuito generoso para desarrolladores individuales y planes premium para equipos que necesitan más poder.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="pricing-card reveal">
+          <h3>Free</h3>
+          <div class="price">$0 <span>/ siempre</span></div>
+          <p class="desc">Para desarrolladores individuales que quieren eliminar el context switching.</p>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> 2 proyectos</li>
+            <li><span class="check">✓</span> Ambiente Development</li>
+            <li><span class="check">✓</span> 5 skills básicos</li>
+            <li><span class="check">✓</span> CLI completo</li>
+            <li><span class="check">✓</span> Git context switching</li>
+            <li><span class="check">✓</span> Env injection</li>
+          </ul>
+          <a href="https://nexus.epigibson.com" class="pricing-btn outline" target="_blank">Comenzar Gratis</a>
+        </div>
+
+        <div class="pricing-card featured reveal">
+          <div class="pricing-inner"></div>
+          <h3>Premium</h3>
+          <div class="price">$9 <span>/ mes</span></div>
+          <p class="desc">Para devs profesionales que necesitan el catálogo completo de skills.</p>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> 10 proyectos</li>
+            <li><span class="check">✓</span> Todos los ambientes</li>
+            <li><span class="check">✓</span> 12 skills completos</li>
+            <li><span class="check">✓</span> Parallel Switch</li>
+            <li><span class="check">✓</span> Script Runner</li>
+            <li><span class="check">✓</span> Auto Documentation</li>
+            <li><span class="check">✓</span> Cloud Audit Sync</li>
+          </ul>
+          <a href="https://nexus.epigibson.com" class="pricing-btn primary" target="_blank">Obtener Premium</a>
+        </div>
+
+        <div class="pricing-card reveal">
+          <h3>Enterprise</h3>
+          <div class="price">Custom</div>
+          <p class="desc">Para equipos que necesitan gestión centralizada y compliance.</p>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Proyectos ilimitados</li>
+            <li><span class="check">✓</span> Team Management</li>
+            <li><span class="check">✓</span> Audit trail centralizado</li>
+            <li><span class="check">✓</span> Roles: Owner, Admin, Dev</li>
+            <li><span class="check">✓</span> SSO & Priority Support</li>
+            <li><span class="check">✓</span> Custom Hooks</li>
+          </ul>
+          <a href="mailto:contact@epigibson.com" class="pricing-btn outline">Contactar Ventas</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA ========== -->
+  <section class="section cta-section">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>¿Listo para dejar de perder tiempo<br /><span class="gradient-text">haciendo context switching?</span></h2>
+        <p>Instala Nexus en menos de 30 segundos y transforma tu flujo de trabajo para siempre.</p>
+        <div class="cta-actions">
+          <a href="https://minor.mintlify.app/installation" class="btn-primary" target="_blank">⚡ Instalar Ahora</a>
+          <a href="https://github.com/Epigibson/nexus" class="btn-secondary" target="_blank">⭐ GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-copy">© 2026 Nexus Control Center — MIT License</div>
+      <div class="footer-links">
+        <a href="https://minor.mintlify.app/what-is-nexus" target="_blank">Docs</a>
+        <a href="https://github.com/Epigibson/nexus" target="_blank">GitHub</a>
+        <a href="https://nexus.epigibson.com" target="_blank">Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ===== Typewriter Terminal ===== */
+    const commands = [
+      {
+        cmd: 'nexus switch my-saas-app --env production',
+        output: [
+          { text: '✅ gh    → epigibson (switched)', cls: '' },
+          { text: '✅ aws   → prod-profile (activated)', cls: '' },
+          { text: '✅ supabase → linked to ref xyzabc', cls: '' },
+          { text: '✅ vercel   → scope @my-team', cls: '' },
+          { text: '✅ env vars → 6 variables injected', cls: '' },
+          { text: '✅ git      → branch main, user epigibson', cls: '' },
+          { text: '', cls: 'info' },
+          { text: '🚀 Context switch complete in 1.2s', cls: 'info' },
+        ],
+      },
+      {
+        cmd: 'nexus switch hotel-system --env staging',
+        output: [
+          { text: '✅ gh    → hotel-dev (switched)', cls: '' },
+          { text: '✅ aws   → staging-profile (activated)', cls: '' },
+          { text: '✅ supabase → linked to ref stg-hotel', cls: '' },
+          { text: '✅ env vars → 9 variables injected', cls: '' },
+          { text: '✅ git      → branch develop, user hotel-dev', cls: '' },
+          { text: '', cls: 'info' },
+          { text: '🚀 Context switch complete in 0.8s', cls: 'info' },
+        ],
+      },
+      {
+        cmd: 'nexus status',
+        output: [
+          { text: '📦 Active Project: hotel-system', cls: 'info' },
+          { text: '🌍 Environment:    staging', cls: 'info' },
+          { text: '🐙 GitHub:         hotel-dev', cls: 'info' },
+          { text: '☁️  AWS Profile:    staging-profile', cls: 'info' },
+          { text: '🔐 Env Vars:       9 loaded', cls: 'info' },
+          { text: '📋 Audit:          47 actions logged', cls: 'info' },
+        ],
+      },
+    ];
+
+    let currentCmd = 0;
+    const typewriterEl = document.getElementById('typewriter')!;
+    const outputEl = document.getElementById('terminalOutput')!;
+
+    function clearTerminal() {
+      typewriterEl.textContent = '';
+      outputEl.innerHTML = '';
+    }
+
+    function typeCommand(text: string, callback: () => void) {
+      let i = 0;
+      const interval = setInterval(() => {
+        typewriterEl.textContent += text[i];
+        i++;
+        if (i >= text.length) { clearInterval(interval); setTimeout(callback, 400); }
+      }, 35);
+    }
+
+    function showOutput(lines: {text: string, cls: string}[], callback: () => void) {
+      let i = 0;
+      const interval = setInterval(() => {
+        const line = lines[i];
+        const div = document.createElement('div');
+        div.className = 'terminal-output' + (line.cls ? ' ' + line.cls : '');
+        div.textContent = line.text;
+        div.style.animation = 'fadeInUp 0.3s ease both';
+        outputEl.appendChild(div);
+        i++;
+        if (i >= lines.length) { clearInterval(interval); setTimeout(callback, 2500); }
+      }, 120);
+    }
+
+    function runSequence() {
+      const { cmd, output } = commands[currentCmd];
+      clearTerminal();
+      typeCommand(cmd, () => { showOutput(output, () => { currentCmd = (currentCmd + 1) % commands.length; runSequence(); }); });
+    }
+    setTimeout(runSequence, 800);
+
+    /* ===== Navbar Scroll ===== */
+    const navbar = document.getElementById('navbar')!;
+    window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 50); });
+
+    /* ===== Mobile Menu ===== */
+    const mobileToggle = document.getElementById('mobileToggle')!;
+    const navLinks = document.getElementById('navLinks')!;
+    mobileToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      mobileToggle.textContent = navLinks.classList.contains('active') ? '✕' : '☰';
+    });
+
+    /* ===== Scroll Reveal ===== */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    /* ===== Count-Up Animation ===== */
+    let statsCounted = false;
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !statsCounted) {
+          statsCounted = true;
+          document.querySelectorAll('.stat-number').forEach((el) => {
+            const target = parseInt((el as HTMLElement).dataset.target || '0');
+            const suffix = (el as HTMLElement).dataset.suffix || '';
+            let current = 0;
+            const duration = 1500;
+            const step = Math.max(1, Math.floor(target / (duration / 30)));
+            const interval = setInterval(() => {
+              current += step;
+              if (current >= target) { current = target; clearInterval(interval); }
+              el.textContent = current + (suffix ? ' ' + suffix : '');
+            }, 30);
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+    const statsGrid = document.querySelector('.stats-grid');
+    if (statsGrid) statsObserver.observe(statsGrid);
+
+    /* ===== Feature Card Mouse Glow ===== */
+    document.querySelectorAll('.feature-card').forEach((card) => {
+      card.addEventListener('mousemove', (e: Event) => {
+        const mouseEvent = e as MouseEvent;
+        const rect = (card as HTMLElement).getBoundingClientRect();
+        const x = ((mouseEvent.clientX - rect.left) / rect.width) * 100;
+        const y = ((mouseEvent.clientY - rect.top) / rect.height) * 100;
+        (card as HTMLElement).style.setProperty('--mouse-x', x + '%');
+        (card as HTMLElement).style.setProperty('--mouse-y', y + '%');
+      });
+    });
+
+    /* ===== Smooth Scroll ===== */
+    document.querySelectorAll('a[href^="#"]').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector((link as HTMLAnchorElement).getAttribute('href')!);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          navLinks.classList.remove('active');
+          mobileToggle.textContent = '☰';
+        }
+      });
+    });
+
+    /* ===== Text Scramble / Decode Effect ===== */
+    const scrambleEl = document.getElementById('heroScramble');
+    if (scrambleEl) {
+      const finalText = scrambleEl.dataset.final || '';
+      const chars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~ABCDEFnexus0123456789';
+      let iteration = 0;
+      const scrambleInterval = setInterval(() => {
+        scrambleEl.textContent = finalText
+          .split('')
+          .map((char, i) => {
+            if (i < iteration) return finalText[i];
+            return chars[Math.floor(Math.random() * chars.length)];
+          })
+          .join('');
+        if (iteration >= finalText.length) clearInterval(scrambleInterval);
+        iteration += 1 / 2;
+      }, 40);
+    }
+
+    /* ===== Interactive Terminal ===== */
+    const terminalInput = document.getElementById('terminalInput') as HTMLInputElement;
+    if (terminalInput) {
+      const responses: Record<string, string[]> = {
+        'nexus switch': [
+          '✅ gh    → epigibson (switched)',
+          '✅ aws   → prod-profile (activated)',
+          '✅ supabase → linked to ref xyzabc',
+          '✅ vercel   → scope @my-team',
+          '✅ env vars → 6 variables injected',
+          '🚀 Context switch complete in 1.2s'
+        ],
+        'nexus status': [
+          '📦 Active Project: my-saas-app',
+          '🌍 Environment:    production',
+          '🐙 GitHub:         epigibson',
+          '☁️  AWS Profile:    prod-profile',
+          '🔐 Env Vars:       6 loaded'
+        ],
+        'nexus list': [
+          '📋 Your Projects:',
+          '  1. my-saas-app     (production)',
+          '  2. hotel-system    (staging)',
+          '  3. mobile-app      (development)'
+        ],
+        'nexus help': [
+          '⚡ Available Commands:',
+          '  switch  → Change project context',
+          '  status  → Show current context',
+          '  list    → List all projects',
+          '  login   → Authenticate with API key',
+          '  skills  → List available skills'
+        ],
+        'nexus skills': [
+          '🧩 Installed Skills:',
+          '  ✅ github    (free)',
+          '  ✅ aws       (free)',
+          '  ✅ supabase  (free)',
+          '  ✅ vercel    (free)',
+          '  ✅ git       (free)',
+          '  ⭐ parallel  (premium)',
+          '  ⭐ scripts   (premium)'
+        ]
+      };
+
+      terminalInput.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        const cmd = terminalInput.value.trim().toLowerCase();
+        if (!cmd) return;
+
+        const outputEl = document.getElementById('terminalOutput')!;
+        /* Clear previous auto-animation output */
+        outputEl.innerHTML = '';
+        const typewriterEl = document.getElementById('typewriter')!;
+        typewriterEl.textContent = cmd;
+
+        /* Find matching response */
+        let matchedResponse: string[] | null = null;
+        for (const key of Object.keys(responses)) {
+          if (cmd.startsWith(key)) { matchedResponse = responses[key]; break; }
+        }
+        if (!matchedResponse) {
+          matchedResponse = ['❌ Unknown command: ' + cmd, '💡 Try: nexus help'];
+        }
+
+        /* Animate response */
+        let i = 0;
+        const interval = setInterval(() => {
+          const div = document.createElement('div');
+          div.className = 'terminal-output' + (matchedResponse![i].startsWith('🚀') || matchedResponse![i].startsWith('📦') ? ' info' : '');
+          div.textContent = matchedResponse![i];
+          div.style.animation = 'fadeInUp 0.3s ease both';
+          outputEl.appendChild(div);
+          i++;
+          if (i >= matchedResponse!.length) clearInterval(interval);
+        }, 100);
+
+        terminalInput.value = '';
+      });
+    }
+
+    /* ===== Parallax Scroll ===== */
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const heroVisual = document.querySelector('.hero-visual') as HTMLElement;
+      if (heroVisual) {
+        heroVisual.style.transform = `translateY(${scrollY * 0.15}px)`;
+      }
+      const heroBadge = document.querySelector('.hero-badge') as HTMLElement;
+      if (heroBadge) {
+        heroBadge.style.transform = `translateY(${scrollY * -0.08}px)`;
+      }
+    }, { passive: true });
+  </script>
+</Layout>

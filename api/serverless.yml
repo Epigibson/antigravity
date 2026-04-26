@@ -17,9 +17,9 @@ provider:
     SUPABASE_ANON_KEY: ${ssm:/nexus/${sls:stage}/supabase_anon_key, env:SUPABASE_ANON_KEY, ''}
     SECRET_KEY: ${ssm:/nexus/${sls:stage}/secret_key, env:SECRET_KEY, 'dev-secret-key-change-in-production'}
     ACCESS_TOKEN_EXPIRE_MINUTES: ${env:ACCESS_TOKEN_EXPIRE_MINUTES, '15'}
-    CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://master.d3cehroonlwhdk.amplifyapp.com"]'}
+    CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://nexusproject.pro", "https://master.d3cehroonlwhdk.amplifyapp.com"]'}
     DEBUG: ${env:DEBUG, 'false'}
-    FRONTEND_URL: ${env:FRONTEND_URL, 'https://master.d3cehroonlwhdk.amplifyapp.com'}
+    FRONTEND_URL: ${env:FRONTEND_URL, 'https://nexusproject.pro'}
     STRIPE_SECRET_KEY: ${ssm:/nexus/${sls:stage}/stripe_secret_key, env:STRIPE_SECRET_KEY, ''}
     STRIPE_PUBLISHABLE_KEY: ${ssm:/nexus/${sls:stage}/stripe_publishable_key, env:STRIPE_PUBLISHABLE_KEY, ''}
     STRIPE_WEBHOOK_SECRET: ${ssm:/nexus/${sls:stage}/stripe_webhook_secret, env:STRIPE_WEBHOOK_SECRET, ''}
@@ -29,6 +29,7 @@ provider:
     cors:
       allowedOrigins:
         - http://localhost:3000
+        - https://nexusproject.pro
         - https://master.d3cehroonlwhdk.amplifyapp.com
       allowedHeaders:
         - Content-Type
