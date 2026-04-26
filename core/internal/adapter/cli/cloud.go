@@ -12,7 +12,7 @@ import (
 	"github.com/nexus-dev/nexus/internal/adapter/repository"
 )
 
-const defaultAPIURL = "https://compassionate-youth-production-e13c.up.railway.app"
+const defaultAPIURL = "https://qegsj4k7m5.execute-api.us-east-1.amazonaws.com"
 
 func getAPIURL() string {
 	if url := os.Getenv("NEXUS_API_URL"); url != "" {
