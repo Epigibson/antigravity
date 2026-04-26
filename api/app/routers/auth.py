@@ -1,6 +1,6 @@
 """Auth router — register, login, profile, API keys."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, Cookie
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +9,10 @@ from app.database import get_db
 from app.models.user import User
 from app.models.api_key import ApiKey
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, UserResponse, UserUpdate
-from app.services.auth_service import register_user, authenticate_user, create_access_token
+from app.services.auth_service import register_user, authenticate_user, create_access_token, create_refresh_token, decode_token, get_user_by_id
+from app.config import settings
 from app.middleware.auth import get_current_user
+from app.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -35,12 +37,22 @@ class ApiKeyCreatedResponse(ApiKeyResponse):
 # ─── Auth endpoints ───
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, response: Response, body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Crear nueva cuenta."""
     try:
         user = await register_user(db, body.email, body.password, body.display_name)
         await db.commit()
         token = create_access_token(user.id, user.email)
+        refresh_token = create_refresh_token(user.id, user.email)
+        response.set_cookie(
+            key="nexus_refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=settings.is_production,
+            samesite="lax",
+            max_age=7 * 24 * 60 * 60
+        )
         return TokenResponse(
             access_token=token,
             user_id=user.id,
@@ -52,7 +64,8 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, response: Response, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Iniciar sesión."""
     user = await authenticate_user(db, body.email, body.password)
     if not user:
@@ -61,8 +74,42 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="Credenciales inválidas",
         )
     token = create_access_token(user.id, user.email)
+    refresh_token = create_refresh_token(user.id, user.email)
+    response.set_cookie(
+        key="nexus_refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.is_production,
+        samesite="lax",
+        max_age=7 * 24 * 60 * 60
+    )
     return TokenResponse(
         access_token=token,
+        user_id=user.id,
+        email=user.email,
+        display_name=user.display_name,
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(db: AsyncSession = Depends(get_db), nexus_refresh_token: str | None = Cookie(default=None)):
+    """Refrescar el access token usando la cookie HttpOnly."""
+    if not nexus_refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+    
+    payload = decode_token(nexus_refresh_token)
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+    user_id = payload.get("sub")
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+        
+    new_access_token = create_access_token(user.id, user.email)
+    
+    return TokenResponse(
+        access_token=new_access_token,
         user_id=user.id,
         email=user.email,
         display_name=user.display_name,

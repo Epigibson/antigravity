@@ -122,7 +122,7 @@ DEFAULT_SKILLS = [
     {
         "name": "Cloud Audit Sync",
         "description": "Sincroniza el audit log local con la nube automáticamente en cada switch para compliance y trazabilidad.",
-        "category": SkillCategory.context_injection,
+        "category": SkillCategory.cloud_audit,
         "is_premium": True,
         "icon": "☁️",
         "version": "1.0.0",
@@ -163,7 +163,7 @@ DEFAULT_SKILLS = [
     {
         "name": "Team Context Sync",
         "description": "Sincroniza configuraciones de contexto entre miembros del equipo en tiempo real.",
-        "category": SkillCategory.context_injection,
+        "category": SkillCategory.team_sync,
         "is_premium": True,
         "icon": "👥",
         "version": "1.0.0",
@@ -181,7 +181,7 @@ DEFAULT_SKILLS = [
     {
         "name": "Secret Rotation",
         "description": "Rota automáticamente secrets y API keys con integración a vaults (AWS SSM, HashiCorp Vault, etc.).",
-        "category": SkillCategory.cli_switching,
+        "category": SkillCategory.secret_rotation,
         "is_premium": True,
         "icon": "🔐",
         "version": "1.0.0",

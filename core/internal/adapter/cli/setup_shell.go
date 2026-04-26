@@ -75,7 +75,7 @@ variables whenever you run 'nexus switch'.`,
 			if installedCount == 0 {
 				fmt.Println("  ⚠️  Could not find standard .bashrc or .zshrc files.")
 				fmt.Println("  Please manually add the following code to your shell configuration:")
-				fmt.Println(shellWrapperCode)
+				fmt.Print(shellWrapperCode)
 			} else {
 				fmt.Println("\n  🎉 \033[1;32mSetup Complete!\033[0m")
 				fmt.Println("  Please restart your terminal or run this command in your current window:")

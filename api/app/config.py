@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # JWT & Crypto
     secret_key: str = "dev-secret-key-change-in-production"
     encryption_key: str = "gZz3p44P624ZzYGBa8qL4Vqof9w4d7S0AILv6Ew8zZ0=" # 32-byte base64 default
-    access_token_expire_minutes: int = 1440  # 24 hours
+    access_token_expire_minutes: int = 15  # 15 minutes (was 24 hours)
     algorithm: str = "HS256"
 
     # CORS

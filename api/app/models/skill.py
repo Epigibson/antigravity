@@ -18,6 +18,9 @@ class SkillCategory(str, enum.Enum):
     sandbox = "sandbox"
     scripts = "scripts"
     parallel = "parallel"
+    cloud_audit = "cloud-audit"
+    team_sync = "team-sync"
+    secret_rotation = "secret-rotation"
 
 
 class SkillDefinition(Base):

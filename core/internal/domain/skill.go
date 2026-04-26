@@ -9,13 +9,16 @@ import (
 type SkillCategory string
 
 const (
-	SkillCategoryContext  SkillCategory = "context-injection"
-	SkillCategoryGit      SkillCategory = "git-state"
-	SkillCategoryCLI      SkillCategory = "cli-switching"
-	SkillCategoryDocs     SkillCategory = "documentation"
-	SkillCategorySandbox  SkillCategory = "sandbox"
-	SkillCategoryScripts  SkillCategory = "scripts"
-	SkillCategoryParallel SkillCategory = "parallel"
+	SkillCategoryContext        SkillCategory = "context-injection"
+	SkillCategoryGit            SkillCategory = "git-state"
+	SkillCategoryCLI            SkillCategory = "cli-switching"
+	SkillCategoryDocs           SkillCategory = "documentation"
+	SkillCategorySandbox        SkillCategory = "sandbox"
+	SkillCategoryScripts        SkillCategory = "scripts"
+	SkillCategoryParallel       SkillCategory = "parallel"
+	SkillCategoryCloudAudit     SkillCategory = "cloud-audit"
+	SkillCategoryTeamSync       SkillCategory = "team-sync"
+	SkillCategorySecretRotation SkillCategory = "secret-rotation"
 )
 
 // SkillStatus represents the execution result of a skill.
