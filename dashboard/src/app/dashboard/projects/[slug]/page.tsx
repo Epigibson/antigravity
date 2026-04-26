@@ -682,8 +682,23 @@ export default function ProjectDetailPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {skill.is_premium && <Badge className="gradient-violet text-white border-0 text-[9px]">PRO</Badge>}
-                        <Switch checked={skill.is_enabled} disabled={togglingSkill === skill.id}
-                          onCheckedChange={() => handleToggleSkill(skill.id, skill.is_enabled)} />
+                        <button
+                          onClick={() => handleToggleSkill(skill.id, skill.is_enabled)}
+                          disabled={togglingSkill === skill.id}
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                            skill.is_enabled ? "bg-primary" : "bg-muted-foreground/30"
+                          } ${togglingSkill === skill.id ? "opacity-50" : ""}`}
+                        >
+                          {togglingSkill === skill.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white" />
+                          ) : (
+                            <span
+                              className={`block w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                                skill.is_enabled ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                          )}
+                        </button>
                       </div>
                     </div>
                   </CardHeader>
