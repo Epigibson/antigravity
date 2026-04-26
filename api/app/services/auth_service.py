@@ -49,7 +49,7 @@ def decode_token(token: str) -> dict | None:
         return None
 
 
-async def register_user(db: AsyncSession, email: str, password: str, display_name: str | None = None) -> User:
+async def register_user(db: AsyncSession, email: str, password: str, display_name: str | None = None, user_id: str | None = None) -> User:
     """Register a new user and create their personal org."""
     # Check if email already exists
     result = await db.execute(select(User).where(User.email == email))
@@ -61,6 +61,8 @@ async def register_user(db: AsyncSession, email: str, password: str, display_nam
         hashed_password=hash_password(password),
         display_name=display_name or email.split("@")[0],
     )
+    if user_id:
+        user.id = user_id
     db.add(user)
     await db.flush()
 

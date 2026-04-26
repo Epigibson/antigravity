@@ -2,16 +2,48 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { api, type UserResponse, type TokenResponse } from "@/lib/api";
+import { api, type UserResponse } from "@/lib/api";
+import { Amplify } from 'aws-amplify';
+import { 
+  signIn, 
+  signUp, 
+  signOut as amplifySignOut, 
+  fetchAuthSession, 
+  getCurrentUser,
+  confirmSignIn,
+  confirmSignUp,
+  type SignInOutput
+} from 'aws-amplify/auth';
+
+// Configure Amplify
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || '',
+      userPoolClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '',
+      loginWith: {
+        email: true,
+      },
+      signUpVerificationMethod: 'code',
+      userAttributes: {
+        email: {
+          required: true,
+        },
+      },
+    }
+  }
+});
 
 interface AuthState {
   user: UserResponse | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<SignInOutput>;
+  confirmMfa: (challengeResponse: string) => Promise<SignInOutput>;
   register: (email: string, password: string, displayName?: string) => Promise<void>;
-  logout: () => void;
+  confirmRegistration: (email: string, code: string) => Promise<void>;
+  logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -23,76 +55,124 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Restore session on mount
+  // Load session on mount
   useEffect(() => {
-    const savedToken = localStorage.getItem("ag_token");
-    const savedUser = localStorage.getItem("ag_user");
-
-    if (savedToken && savedUser) {
-      setToken(savedToken);
+    const loadSession = async () => {
       try {
-        setUser(JSON.parse(savedUser));
-      } catch {
-        localStorage.removeItem("ag_user");
-      }
-      // Validate token is still valid
-      api.getProfile().then((fresh) => {
-        setUser(fresh);
-        localStorage.setItem("ag_user", JSON.stringify(fresh));
-      }).catch(() => {
-        // Token expired
-        localStorage.removeItem("ag_token");
-        localStorage.removeItem("ag_user");
+        const session = await fetchAuthSession();
+        if (session.tokens?.idToken) {
+          const jwtToken = session.tokens.idToken.toString();
+          setToken(jwtToken);
+          localStorage.setItem("ag_token", jwtToken);
+          
+          // Fetch profile from backend using Cognito token
+          try {
+            const profile = await api.getProfile();
+            setUser(profile);
+          } catch (e) {
+            console.error("Failed to fetch profile from backend", e);
+            // Si el backend aún no tiene al usuario, tal vez debamos sincronizarlo aquí
+            // Por ahora, lo limpiamos si falla el backend
+            setUser(null);
+            setToken(null);
+            localStorage.removeItem("ag_token");
+          }
+        }
+      } catch (e) {
+        // Not signed in
+        console.log("No valid session found", e);
         setToken(null);
         setUser(null);
-      });
-    }
-    setIsLoading(false);
-  }, []);
-
-  const handleAuth = useCallback((data: TokenResponse) => {
-    const userObj: UserResponse = {
-      id: data.user_id,
-      email: data.email,
-      display_name: data.display_name,
-      avatar_url: null,
-      plan: "free",
-      created_at: new Date().toISOString(),
+        localStorage.removeItem("ag_token");
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setToken(data.access_token);
-    setUser(userObj);
-    localStorage.setItem("ag_token", data.access_token);
-    localStorage.setItem("ag_user", JSON.stringify(userObj));
+    
+    loadSession();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const data = await api.login(email, password);
-    handleAuth(data);
-    // Fetch full profile
-    const profile = await api.getProfile();
-    setUser(profile);
-    localStorage.setItem("ag_user", JSON.stringify(profile));
-    router.push("/dashboard");
-  }, [handleAuth, router]);
+    const result = await signIn({ username: email, password });
+    
+    if (result.isSignedIn) {
+      const session = await fetchAuthSession();
+      const jwtToken = session.tokens?.idToken?.toString() || '';
+      setToken(jwtToken);
+      localStorage.setItem("ag_token", jwtToken);
+      
+      try {
+        const profile = await api.getProfile();
+        setUser(profile);
+        router.push("/dashboard");
+      } catch (error) {
+        console.error("Profile sync error after login", error);
+      }
+    }
+    
+    return result;
+  }, [router]);
+
+  const confirmMfa = useCallback(async (challengeResponse: string) => {
+    const result = await confirmSignIn({ challengeResponse });
+    if (result.isSignedIn) {
+      const session = await fetchAuthSession();
+      const jwtToken = session.tokens?.idToken?.toString() || '';
+      setToken(jwtToken);
+      localStorage.setItem("ag_token", jwtToken);
+      
+      try {
+        const profile = await api.getProfile();
+        setUser(profile);
+        router.push("/dashboard");
+      } catch (error) {
+        console.error("Profile sync error after MFA", error);
+      }
+    }
+    return result;
+  }, [router]);
 
   const register = useCallback(async (email: string, password: string, displayName?: string) => {
-    const data = await api.register(email, password, displayName);
-    handleAuth(data);
-    router.push("/dashboard");
-  }, [handleAuth, router]);
+    await signUp({
+      username: email,
+      password,
+      options: {
+        userAttributes: {
+          email,
+          name: displayName || email.split("@")[0]
+        }
+      }
+    });
+    // Recordar: Backend necesita crear el usuario en su base de datos. Lo haremos en confirmRegistration o vía Cognito Trigger.
+  }, []);
 
-  const logout = useCallback(() => {
+  const confirmRegistration = useCallback(async (email: string, code: string) => {
+    await confirmSignUp({
+      username: email,
+      confirmationCode: code
+    });
+    // Opcionalmente, hacer auto-login aquí o redirigir a login
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await amplifySignOut();
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
     setToken(null);
     setUser(null);
     localStorage.removeItem("ag_token");
-    localStorage.removeItem("ag_user");
     router.push("/login");
   }, [router]);
 
   const refreshProfile = useCallback(async () => {
-    const profile = await api.getProfile();
-    setUser(profile);
-    localStorage.setItem("ag_user", JSON.stringify(profile));
+    try {
+      const profile = await api.getProfile();
+      setUser(profile);
+    } catch (error) {
+      console.error("Error refreshing profile", error);
+    }
   }, []);
 
   return (
@@ -103,7 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isAuthenticated: !!token,
         login,
+        confirmMfa,
         register,
+        confirmRegistration,
         logout,
         refreshProfile,
       }}

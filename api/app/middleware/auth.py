@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.user import User
 from app.models.api_key import ApiKey
-from app.services.auth_service import decode_token, get_user_by_id
+from app.services.auth_service import get_user_by_id, register_user
+from app.services.cognito_service import verify_cognito_token
+import secrets
 
 security = HTTPBearer(auto_error=False)
 
@@ -50,7 +52,7 @@ async def get_current_user(
 
     # ── Try JWT Bearer token (Dashboard auth) ──
     if credentials:
-        payload = decode_token(credentials.credentials)
+        payload = await verify_cognito_token(credentials.credentials)
         if payload is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -64,7 +66,23 @@ async def get_current_user(
 
         user = await get_user_by_id(db, user_id)
         if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+            # Auto-register user from Cognito token if they don't exist
+            email = payload.get("email")
+            if not email:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cognito token missing email")
+            
+            # Generate a random password since Cognito handles the real one
+            dummy_password = secrets.token_urlsafe(32)
+            display_name = payload.get("name") or payload.get("preferred_username") or email.split("@")[0]
+            
+            try:
+                # We need to explicitly set their ID to match Cognito sub so future lookups work
+                user = await register_user(db, email, dummy_password, display_name, user_id=user_id)
+                await db.commit()
+            except Exception as e:
+                await db.rollback()
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to sync user: {str(e)}")
+                
         return user
 
     # ── No auth provided ──

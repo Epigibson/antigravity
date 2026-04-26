@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15  # 15 minutes (was 24 hours)
     algorithm: str = "HS256"
 
+    # AWS Cognito
+    cognito_region: str = "us-east-1"
+    cognito_user_pool_id: Optional[str] = None
+    cognito_client_id: Optional[str] = None
+
     # CORS
     cors_origins: List[str] = ["http://localhost:3000"]
 
