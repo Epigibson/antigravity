@@ -9,39 +9,43 @@ description: "Cómo instalar el CLI de Nexus en tu sistema operativo."
 | Requisito | Mínimo | Recomendado |
 |-----------|--------|-------------|
 | **OS** | Windows 10, macOS 12, Ubuntu 20.04 | Última versión |
-| **Go** | 1.22 | 1.26+ |
-| **Git** | 2.30 | Última versión |
 | **Disco** | 10 MB | 10 MB |
 
 <Info>
-Go solo es necesario para compilar. El binario resultante no tiene dependencias externas.
+Ya no necesitas instalar Go ni clonar el repositorio, proporcionamos binarios precompilados.
 </Info>
 
 ## Instalación rápida
 
+1. Descarga el archivo compilado correspondiente a tu sistema operativo desde la página de [Releases de GitHub](https://github.com/Epigibson/Nexus/releases).
+2. Extrae el archivo (si viene comprimido) y renómbralo a `nexus` (o `nexus.exe` en Windows).
+3. Mueve el archivo a una carpeta que esté en tu PATH, o colócalo en una ubicación y agrégalo al PATH.
+
 <Tabs>
   <Tab title="macOS / Linux">
-    La forma más rápida y automática. Este script compilará el código, lo instalará en tu PATH e inyectará el validador a tu shell actual.
+    Mueve el archivo descargado a `/usr/local/bin` o a la carpeta local de Nexus:
 
     ```bash
-    curl -sSL https://raw.githubusercontent.com/Epigibson/Nexus/master/install.sh | bash
-    ```
+    # Dale permisos de ejecución
+    chmod +x nexus
 
-    Si deseas hacerlo manual, puedes descargar el repositorio, entrar al directorio y compilar con `go build -o nexus ./cmd/nexus`.
+    # Mover a /usr/local/bin (recomendado)
+    sudo mv nexus /usr/local/bin/
+
+    # O si prefieres mover a ~/.nexus/bin y agregar al PATH
+    mkdir -p ~/.nexus/bin
+    mv nexus ~/.nexus/bin/
+    export PATH="$HOME/.nexus/bin:$PATH"
+    ```
   </Tab>
   <Tab title="Windows">
     ```powershell
-    # 1. Clonar y compilar
-    git clone https://github.com/Epigibson/Nexus.git
-    cd Nexus/core
-    go build -o nexus.exe ./cmd/nexus
-
-    # 2. Instalar en ~/.nexus/bin
+    # 1. Instalar en ~/.nexus/bin
     $dir = "$env:USERPROFILE\.nexus\bin"
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
     Move-Item nexus.exe "$dir\nexus.exe" -Force
 
-    # 3. Agregar al PATH (solo la primera vez)
+    # 2. Agregar al PATH (solo la primera vez)
     $path = [System.Environment]::GetEnvironmentVariable("Path", "User")
     if ($path -notlike "*\.nexus\bin*") {
         [System.Environment]::SetEnvironmentVariable("Path", "$path;$dir", "User")
@@ -63,20 +67,22 @@ Nexus v0.1.0
 
 ## Actualizar
 
-Para actualizar a la última versión:
+Para actualizar a la última versión, simplemente descarga el nuevo archivo compilado y reemplaza el binario anterior en la misma ubicación:
 
-```bash
-cd nexus  # directorio donde clonaste
-git pull
-cd core
-go build -o nexus ./cmd/nexus
-
-# Windows:
-Copy-Item nexus.exe "$env:USERPROFILE\.nexus\bin\nexus.exe" -Force
-
-# macOS/Linux:
-cp nexus ~/.nexus/bin/
-```
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash
+    # Reemplazar en la ubicación donde lo instalaste (ej. /usr/local/bin)
+    sudo mv nuevo_nexus_descargado /usr/local/bin/nexus
+    chmod +x /usr/local/bin/nexus
+    ```
+  </Tab>
+  <Tab title="Windows">
+    ```powershell
+    Copy-Item nuevo_nexus_descargado.exe "$env:USERPROFILE\.nexus\bin\nexus.exe" -Force
+    ```
+  </Tab>
+</Tabs>
 
 ## Desinstalar
 
@@ -93,10 +99,12 @@ cp nexus ~/.nexus/bin/
     ```
   </Tab>
   <Tab title="macOS / Linux">
-    Ejecuta el script desinstalador que limpiará el cache, el binario global y el inyector de comandos en `~/.bashrc`:
-
     ```bash
-    curl -sSL https://raw.githubusercontent.com/Epigibson/Nexus/master/uninstall.sh | bash
+    # Eliminar configuración y binario local
+    rm -rf ~/.nexus
+    
+    # Si lo instalaste globalmente, eliminar el binario global
+    sudo rm -f /usr/local/bin/nexus
     ```
   </Tab>
 </Tabs>

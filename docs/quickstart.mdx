@@ -4,37 +4,22 @@ sidebarTitle: "Quick Start"
 description: "Instala el CLI de Nexus y haz tu primer switch en 5 minutos."
 ---
 
-## Prerrequisitos
+## Paso 1: Descargar e instalar el CLI
 
-<AccordionGroup>
-  <Accordion title="Go 1.22+" icon="golang">
-    Necesario para compilar el CLI.
-    ```bash
-    go version  # 1.22+
-    ```
-    Descarga: [go.dev/dl](https://go.dev/dl/)
-  </Accordion>
-  <Accordion title="Git" icon="git-alt">
-    ```bash
-    git --version
-    ```
-  </Accordion>
-</AccordionGroup>
+Ya no es necesario clonar el repositorio ni tener Go instalado. Simplemente descarga el archivo precompilado.
 
-## Paso 1: Instalar el CLI
+1. Ve a la [página de Releases en GitHub](https://github.com/Epigibson/Nexus/releases) y descarga el archivo para tu sistema operativo.
+2. Extrae el archivo (si viene comprimido) y renómbralo a `nexus` (o `nexus.exe` en Windows).
+3. Configúralo en tu sistema:
 
 <Tabs>
   <Tab title="Windows (PowerShell)">
     ```powershell
-    # Descargar y compilar
-    git clone https://github.com/Epigibson/nexus.git
-    cd nexus/core
-    go build -o nexus.exe ./cmd/nexus
-
     # Instalar globalmente
     $installDir = "$env:USERPROFILE\.nexus\bin"
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-    Copy-Item nexus.exe "$installDir\nexus.exe" -Force
+    # Mueve el nexus.exe descargado a esa carpeta
+    Move-Item nexus.exe "$installDir\nexus.exe" -Force
 
     # Agregar al PATH (permanente, solo la primera vez)
     $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
@@ -49,19 +34,15 @@ description: "Instala el CLI de Nexus y haz tu primer switch en 5 minutos."
   </Tab>
   <Tab title="macOS / Linux">
     ```bash
-    # Descargar y compilar
-    git clone https://github.com/Epigibson/nexus.git
-    cd nexus/core
-    go build -o nexus ./cmd/nexus
+    # Dar permisos de ejecución y mover al PATH
+    chmod +x nexus
+    sudo mv nexus /usr/local/bin/
 
-    # Instalar globalmente
-    mkdir -p ~/.nexus/bin
-    cp nexus ~/.nexus/bin/
-    chmod +x ~/.nexus/bin/nexus
-
-    # Agregar al PATH (añadir a ~/.bashrc o ~/.zshrc)
-    echo 'export PATH="$HOME/.nexus/bin:$PATH"' >> ~/.zshrc
-    source ~/.zshrc
+    # Si no tienes permisos de sudo, puedes moverlo a ~/.nexus/bin
+    # mkdir -p ~/.nexus/bin
+    # mv nexus ~/.nexus/bin/
+    # echo 'export PATH="$HOME/.nexus/bin:$PATH"' >> ~/.zshrc
+    # source ~/.zshrc
     ```
   </Tab>
 </Tabs>
@@ -200,17 +181,7 @@ nexus switch auto-hotel-luxor --env production
     - Genera una nueva key desde el dashboard si la anterior expiró
     - Verifica conexión a internet
   </Accordion>
-  <Accordion title="'go' no se reconoce (conflicto con alias)">
-    Si tienes un alias de PowerShell que reemplaza `go` (por ejemplo, para `git checkout`):
 
-    ```powershell
-    # Renombra tu alias en $PROFILE
-    # Cambia: function go { ... }
-    # A:      function ggo { ... }
-    ```
-
-    O usa el path completo: `& "C:\Program Files\Go\bin\go.exe" build ...`
-  </Accordion>
   <Accordion title="Error 500 al generar API Key">
     Si ves un error interno al crear la key, espera 2 minutos para que Railway redeployee tras un push reciente.
   </Accordion>
