@@ -74,29 +74,15 @@ curl -sSL https://raw.githubusercontent.com/Epigibson/Nexus/master/install.sh | 
 
 ### Windows (PowerShell)
 
+Instalación rápida en un solo comando (descarga el binario oficial precompilado):
+
 ```powershell
-# 1. Descargar y compilar
-git clone https://github.com/Epigibson/Nexus.git
-cd Nexus/core
-go build -o nexus.exe ./cmd/nexus
-
-# 2. Instalar globalmente
-$installDir = "$env:USERPROFILE\.nexus\bin"
-New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-Copy-Item nexus.exe "$installDir\nexus.exe" -Force
-
-# 3. Agregar al PATH (permanente)
-$currentPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
-if ($currentPath -notlike "*\.nexus\bin*") {
-    [System.Environment]::SetEnvironmentVariable("Path", "$currentPath;$installDir", "User")
-}
-
-# 4. Reiniciar terminal y verificar
-nexus version
-# → Nexus v0.1.0
+irm https://raw.githubusercontent.com/Epigibson/Nexus/master/install.ps1 | iex
 ```
 
-### Compilación Manual (macOS/Linux)
+*Nota: Una vez instalado, reinicia tu terminal de PowerShell para que se recargue el PATH y verifica la instalación ejecutando `nexus version`.*
+
+### Compilación Manual (Avanzado)
 
 ```bash
 # 1. Descargar y compilar
@@ -117,7 +103,7 @@ nexus version
 
 ### 1. Crear cuenta en el Dashboard
 
-Regístrate en [nexus-production-a677.up.railway.app](https://nexus-production-a677.up.railway.app) y crea un proyecto con sus entornos (development, staging, production).
+Regístrate en [nexusproject.pro](https://nexusproject.pro) y crea un proyecto con sus entornos (development, staging, production).
 
 ### 2. Generar API Key
 
@@ -168,7 +154,7 @@ nexus logout
 | Dashboard ↔ API | JWT Auth + REST fetch client | ✅ |
 | Documentation | Mintlify (theme: palm) | ✅ |
 | Database | PostgreSQL (Supabase) | ✅ |
-| Encryption | AES-256-GCM + Argon2id | 📐 Diseñado |
+| Encryption | AES-256-GCM + Argon2id | ✅ |
 
 ### Documentación (Mintlify)
 ```bash
