@@ -231,41 +231,120 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               ) : mfaSetupMode ? (
-                <div className="space-y-5 animate-in slide-in-from-top-4 fade-in duration-300">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full gradient-violet text-[11px] font-bold text-white shadow-md">1</div>
-                      Escanea el código QR
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {/* Progress Stepper */}
+                  <div className="flex items-center gap-0 mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-violet text-xs font-bold text-white shadow-lg shadow-violet-500/30">1</div>
+                      <span className="text-sm font-semibold hidden sm:inline">Escanear</span>
                     </div>
-                    <div className="flex flex-col items-center gap-4 rounded-xl border border-border/50 p-6 bg-background/50">
-                      <div className="rounded-2xl bg-white p-4 shadow-xl shadow-black/10"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(mfaQrUri)}`} alt="QR" className="h-[180px] w-[180px]" /></div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1"><Smartphone className="h-3 w-3" />Google Authenticator, Authy, 1Password</p>
-                      <Separator />
-                      <div className="text-center space-y-1.5">
-                        <p className="text-[11px] text-muted-foreground">Clave manual:</p>
+                    <div className="flex-1 mx-3 h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-violet-500/30" />
+                    <div className="flex items-center gap-2">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${mfaCode.length > 0 ? "gradient-violet text-white shadow-lg shadow-violet-500/30" : "bg-muted text-muted-foreground"}`}>2</div>
+                      <span className="text-sm font-semibold hidden sm:inline">Verificar</span>
+                    </div>
+                    <div className="flex-1 mx-3 h-0.5 rounded-full bg-muted" />
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">✓</div>
+                      <span className="text-sm font-semibold hidden sm:inline text-muted-foreground">Listo</span>
+                    </div>
+                  </div>
+
+                  {/* Two-Column Layout */}
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Left: QR Code */}
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-border/50 bg-background/30 p-6 relative overflow-hidden">
+                      {/* Decorative glow */}
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        <div className="h-48 w-48 rounded-full bg-violet-500/8 blur-[40px] animate-pulse" />
+                      </div>
+                      {/* QR Container */}
+                      <div className="relative">
+                        <div className="absolute -inset-3 rounded-3xl border-2 border-dashed border-violet-500/20 animate-[spin_20s_linear_infinite]" />
+                        <div className="rounded-2xl bg-white p-4 shadow-2xl shadow-violet-500/10 relative z-10">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(mfaQrUri)}`}
+                            alt="QR Code para 2FA"
+                            className="h-[180px] w-[180px]"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground relative z-10">
+                        <Smartphone className="h-3.5 w-3.5" />
+                        Escanea con tu app autenticadora
+                      </div>
+                      <div className="mt-2 flex flex-wrap justify-center gap-2">
+                        {["Google Auth", "Authy", "1Password"].map((app) => (
+                          <span key={app} className="rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">{app}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right: Instructions + Verify */}
+                    <div className="space-y-5">
+                      {/* Manual Key */}
+                      <div className="rounded-xl border border-border/50 bg-background/30 p-4 space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                          <Key className="h-3 w-3" />
+                          ¿No puedes escanear? Usa la clave manual:
+                        </div>
                         <div className="flex gap-2 items-center">
-                          <code className="text-[11px] font-mono bg-muted/80 px-3 py-1.5 rounded-lg break-all">{mfaSecret}</code>
-                          <Button variant="ghost" size="sm" onClick={handleCopySecret} className="h-7 w-7 p-0 shrink-0">
-                            {secretCopied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                          <div className="flex-1 rounded-lg bg-muted/50 px-3 py-2 font-mono text-[11px] break-all select-all leading-relaxed">{mfaSecret}</div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCopySecret}
+                            className={`shrink-0 gap-1.5 transition-all ${secretCopied ? "border-emerald-500/50 text-emerald-500" : ""}`}
+                          >
+                            {secretCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                            {secretCopied ? "Copiada" : "Copiar"}
                           </Button>
                         </div>
                       </div>
+
+                      {/* Verify Code */}
+                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <ShieldCheck className="h-4 w-4 text-primary" />
+                          Ingresa el código de verificación
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Abre tu app autenticadora e ingresa el código de 6 dígitos que aparece.
+                        </p>
+                        <div className="flex gap-3">
+                          <div className="relative flex-1 max-w-[220px]">
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={6}
+                              placeholder="● ● ● ● ● ●"
+                              value={mfaCode}
+                              onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+                              className="text-center text-2xl tracking-[0.3em] h-14 font-mono bg-background/80 border-primary/20 focus:border-primary/50"
+                            />
+                            {/* Progress dots */}
+                            <div className="flex gap-1.5 justify-center mt-2">
+                              {Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} className={`h-1.5 w-1.5 rounded-full transition-all duration-200 ${i < mfaCode.length ? "bg-primary scale-125" : "bg-muted"}`} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={handleVerifyMfa}
+                          disabled={mfaCode.length !== 6 || mfaVerifying}
+                          className="w-full gap-2 h-11 gradient-violet text-white border-0 shadow-lg shadow-violet-500/20 hover:opacity-90 transition-all disabled:opacity-40"
+                        >
+                          {mfaVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                          {mfaVerifying ? "Verificando código..." : "Activar Autenticación 2FA"}
+                        </Button>
+                      </div>
+
+                      {/* Cancel */}
+                      <Button variant="ghost" size="sm" onClick={() => { setMfaSetupMode(false); setMfaCode(""); }} className="text-muted-foreground hover:text-foreground">← Cancelar configuración</Button>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full gradient-violet text-[11px] font-bold text-white shadow-md">2</div>
-                      Ingresa el código de 6 dígitos
-                    </div>
-                    <div className="flex gap-3">
-                      <Input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6} placeholder="000000" value={mfaCode} onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))} className="text-center text-xl tracking-[0.2em] h-12 font-mono max-w-[200px] bg-background/50" />
-                      <Button onClick={handleVerifyMfa} disabled={mfaCode.length !== 6 || mfaVerifying} className="gap-2 h-12 gradient-violet text-white border-0 shadow-lg shadow-violet-500/20">
-                        {mfaVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                        {mfaVerifying ? "Verificando..." : "Activar 2FA"}
-                      </Button>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => { setMfaSetupMode(false); setMfaCode(""); }} className="text-muted-foreground">← Cancelar</Button>
                 </div>
               ) : (
                 <div className="space-y-4">
