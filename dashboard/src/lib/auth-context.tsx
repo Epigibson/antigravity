@@ -93,7 +93,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const result = await signIn({ username: email, password });
+    let result;
+    try {
+      result = await signIn({ username: email, password });
+    } catch (err: any) {
+      if (err.name === 'UserAlreadyAuthenticatedException' || (err.message && err.message.includes('already a signed in user'))) {
+        await amplifySignOut();
+        result = await signIn({ username: email, password });
+      } else {
+        throw err;
+      }
+    }
     
     if (result.isSignedIn) {
       const session = await fetchAuthSession();

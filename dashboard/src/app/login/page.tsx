@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 import { Zap, Mail, Lock, User, ArrowRight, Eye, EyeOff, ShieldCheck, KeyRound } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,8 +11,15 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export default function LoginPage() {
-  const { login, register, confirmMfa, confirmRegistration } = useAuth();
+  const { login, register, confirmMfa, confirmRegistration, isAuthenticated, isLoading } = useAuth();
   const [mode, setMode] = useState<"login" | "register" | "mfa" | "confirm-register">("login");
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, router]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
