@@ -26,11 +26,13 @@ provider:
     STRIPE_WEBHOOK_SECRET: ${env:STRIPE_WEBHOOK_SECRET, ''}
     STRIPE_PREMIUM_PRICE_ID: ${env:STRIPE_PREMIUM_PRICE_ID, ''}
     ENVIRONMENT: production
+  CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://master.d3cehroonlwhdk.amplifyapp.com"]'}
+    FRONTEND_URL: ${env:FRONTEND_URL, 'https://master.d3cehroonlwhdk.amplifyapp.com'}
   httpApi:
     cors:
       allowedOrigins:
         - http://localhost:3000
-        - https://qegsj4k7m5.execute-api.us-east-1.amazonaws.com
+        - https://master.d3cehroonlwhdk.amplifyapp.com
       allowedHeaders:
         - Content-Type
         - Authorization
