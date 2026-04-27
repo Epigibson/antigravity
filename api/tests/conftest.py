@@ -1,3 +1,8 @@
+import os
+
+os.environ['SECRET_KEY'] = 'test-secret-key'
+os.environ['ENCRYPTION_KEY'] = 'gZz3p44P624ZzYGBa8qL4Vqof9w4d7S0AILv6Ew8zZ0='
+
 """Shared test fixtures — in-memory SQLite DB, test client, auth helpers."""
 
 import asyncio

@@ -60,7 +60,7 @@ def test_config_import():
 def test_cors_parser_json():
     """CORS parser should handle JSON arrays + auto-add localhost."""
     from app.config import Settings
-    s = Settings(cors_origins='["http://a.com","http://b.com"]')
+    s = Settings(cors_origins='["http://a.com","http://b.com"]', secret_key="test", encryption_key="gZz3p44P624ZzYGBa8qL4Vqof9w4d7S0AILv6Ew8zZ0=")
     assert "http://a.com" in s.cors_origins
     assert "http://b.com" in s.cors_origins
     assert "http://localhost:3000" in s.cors_origins
@@ -69,7 +69,7 @@ def test_cors_parser_json():
 def test_cors_parser_csv():
     """CORS parser should handle comma-separated strings + auto-add localhost."""
     from app.config import Settings
-    s = Settings(cors_origins="http://a.com,http://b.com")
+    s = Settings(cors_origins="http://a.com,http://b.com", secret_key="test", encryption_key="gZz3p44P624ZzYGBa8qL4Vqof9w4d7S0AILv6Ew8zZ0=")
     assert "http://a.com" in s.cors_origins
     assert "http://b.com" in s.cors_origins
     assert "http://localhost:3000" in s.cors_origins
@@ -78,6 +78,6 @@ def test_cors_parser_csv():
 def test_cors_parser_single():
     """CORS parser should handle a single URL + auto-add localhost."""
     from app.config import Settings
-    s = Settings(cors_origins="http://a.com")
+    s = Settings(cors_origins="http://a.com", secret_key="test", encryption_key="gZz3p44P624ZzYGBa8qL4Vqof9w4d7S0AILv6Ew8zZ0=")
     assert "http://a.com" in s.cors_origins
     assert "http://localhost:3000" in s.cors_origins

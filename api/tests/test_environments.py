@@ -231,8 +231,8 @@ async def test_set_env_vars(client, auth_headers):
     assert "DATABASE_URL" in data["env_var_keys"]
     assert "AWS_ACCESS_KEY_ID" in data["env_var_keys"]
     # Values should be masked (first 4 chars + dots)
-    assert data["env_vars"]["DATABASE_URL"] == "post••••"
-    assert data["env_vars"]["AWS_ACCESS_KEY_ID"] == "AKIA••••"
+    assert data["env_vars"]["DATABASE_URL"] == "••••"
+    assert data["env_vars"]["AWS_ACCESS_KEY_ID"] == "••••"
 
 
 @pytest.mark.asyncio
