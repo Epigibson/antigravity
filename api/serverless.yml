@@ -16,6 +16,7 @@ provider:
     SUPABASE_URL: ${ssm:/nexus/${sls:stage}/supabase_url, env:SUPABASE_URL, ''}
     SUPABASE_ANON_KEY: ${ssm:/nexus/${sls:stage}/supabase_anon_key, env:SUPABASE_ANON_KEY, ''}
     SECRET_KEY: ${ssm:/nexus/${sls:stage}/secret_key, env:SECRET_KEY, 'dev-secret-key-change-in-production'}
+    ENCRYPTION_KEY: ${ssm:/nexus/${sls:stage}/encryption_key, env:ENCRYPTION_KEY, ''}
     ACCESS_TOKEN_EXPIRE_MINUTES: ${env:ACCESS_TOKEN_EXPIRE_MINUTES, '15'}
     CORS_ORIGINS: ${env:CORS_ORIGINS, '["http://localhost:3000","https://nexusproject.pro", "https://master.d3cehroonlwhdk.amplifyapp.com"]'}
     DEBUG: ${env:DEBUG, 'false'}
