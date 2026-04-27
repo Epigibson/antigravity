@@ -83,22 +83,23 @@ async def list_members(
     ]
 
     # Other members
-    for m in org.members:
-        if m.user_id == org.owner_id:
-            continue  # Already added as owner
-        # Get user info
-        user_result = await db.execute(
-            select(User).where(User.id == m.user_id)
-        )
-        member_user = user_result.scalar_one_or_none()
-        if member_user:
-            members_data.append(MemberResponse(
-                user_id=member_user.id,
-                email=member_user.email,
-                display_name=member_user.display_name,
-                role=m.role.value if isinstance(m.role, OrgRole) else m.role,
-                joined_at=m.joined_at.isoformat() if m.joined_at else "",
-            ))
+    member_user_ids = [m.user_id for m in org.members if m.user_id != org.owner_id]
+    if member_user_ids:
+        users_result = await db.execute(select(User).where(User.id.in_(member_user_ids)))
+        users_map = {u.id: u for u in users_result.scalars().all()}
+
+        for m in org.members:
+            if m.user_id == org.owner_id:
+                continue
+            member_user = users_map.get(m.user_id)
+            if member_user:
+                members_data.append(MemberResponse(
+                    user_id=member_user.id,
+                    email=member_user.email,
+                    display_name=member_user.display_name,
+                    role=m.role.value if isinstance(m.role, OrgRole) else m.role,
+                    joined_at=m.joined_at.isoformat() if m.joined_at else "",
+                ))
 
     return members_data
 
